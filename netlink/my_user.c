@@ -12,6 +12,7 @@
 
 #include <stdio.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <linux/netlink.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -25,8 +26,8 @@
 
 struct prm_nlmsg {
     struct nlmsghdr nlh;
-    __u32   msg_len;
-    __u8    msg_data[PAYLOAD_MAX_SIZE];
+    uint32_t   msg_len;
+    uint8_t    msg_data[PAYLOAD_MAX_SIZE];
 };
 
 // End: Same in both kernel mode and user mode
@@ -45,7 +46,7 @@ struct prm_nlmsg    *msg = NULL;            // message buffer
 int u2k_socket_init()
 {
     // Create netlink socket
-    netlink_socket = (AF_NETLINK, SOCK_RAW, NETLINK_PRM);
+    netlink_socket = socket(AF_NETLINK, SOCK_RAW, NETLINK_PRM);
     if (netlink_socket == -1)
     {
         perror("Socket create failed!\n");
@@ -91,7 +92,12 @@ int u2k_socket_init()
     kernel_addr->nl_groups = 0;
 
     // bind socket
-    bind(netlink_socket, (struct sockaddr *)& user_addr, sizeof(struct sockaddr_nl));
+    int ret = bind(netlink_socket, (struct sockaddr *) user_addr, sizeof(struct sockaddr_nl));
+    if (ret == -1)
+    {
+        return PRM_ERROR;
+    }
+    return PRM_SUCCESS;
 }
 
 /**
@@ -138,8 +144,8 @@ int u2k_send(char *buf, size_t len)
     strncpy(msg->msg_data, buf, len);
     msg->msg_len = len;
 
-    int len = sendto(netlink_socket, msg, msg->nlh.nlmsg_len, 0, (struct sockaddr *)&kernel_addr, sizeof(struct sockaddr_nl));
-    if(len == -1)
+    ssize_t send_len = sendto(netlink_socket, msg, msg->nlh.nlmsg_len, 0, (struct sockaddr *)kernel_addr, sizeof(struct sockaddr_nl));
+    if(send_len == -1)
     {
         perror("u2k send failed!\n");
         return PRM_ERROR;
@@ -154,7 +160,7 @@ int u2k_send(char *buf, size_t len)
  * @param buflen length of buf
  * @return If this function succeeds, return num of received bytes, else return PRM_ERROR
  */
-int u2k_recv(char *buf, size_t buflen)
+ssize_t u2k_recv(char *buf, size_t buflen)
 {
     if(buf == NULL)
     {
@@ -162,10 +168,11 @@ int u2k_recv(char *buf, size_t buflen)
         return PRM_ERROR;
     }
 
-    size_t len = -1;
+    ssize_t len = -1;
     struct prm_nlmsg msg;
     // recv msg
-    recvfrom(netlink_socket, &msg, sizeof(struct prm_nlmsg), 0, (struct sockaddr *)&kernel_addr, &len);
+    socklen_t kernel_addrlen = sizeof(struct sockaddr_nl);
+    len = recvfrom(netlink_socket, &msg, sizeof(struct prm_nlmsg), 0, (struct sockaddr *)kernel_addr, &kernel_addrlen);
 
     if(len == -1)
     {
@@ -179,7 +186,18 @@ int u2k_recv(char *buf, size_t buflen)
     }
 
     strncpy(buf, msg.msg_data, msg.msg_len);
-
-    return len;
+    return msg.msg_len;
 }
 
+int main ()
+{
+    char * buf = "123321";
+    char msg[1024];
+
+    u2k_socket_init();
+    u2k_send(buf, strlen(buf)+1);
+    ssize_t ret = u2k_recv(msg, 1024);
+    printf("%s\n%ld\n", msg, ret);
+    u2k_socket_release();
+    return 0;
+}

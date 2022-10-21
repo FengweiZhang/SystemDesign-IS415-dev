@@ -21,10 +21,12 @@ MODULE_VERSION("0.0");
 
 #include "../common/prm_error.h"
 
-#include <net/socket.h>
-#include <linux/init.h>
+
+#include <net/sock.h>
 #include <linux/netlink.h>
 #include <linux/types.h>
+#include <linux/slab.h>
+
 
 // Begin: Same in both kernel mode and user mode
 
@@ -33,8 +35,8 @@ MODULE_VERSION("0.0");
 
 struct prm_nlmsg {
     struct nlmsghdr nlh;
-    __u32   msg_len;
-    __u8    msg_data[PAYLOAD_MAX_SIZE];
+    u32   msg_len;
+    u8    msg_data[PAYLOAD_MAX_SIZE];
 };
 
 // End: Same in both kernel mode and user mode
@@ -51,15 +53,14 @@ pid_t pid = -1;     // pid is int
  */
 int k2u_send(char *buf, size_t len)
 {
-
     struct sk_buff *skb_out = nlmsg_new(len+4, GFP_KERNEL);
     struct nlmsghdr *nlh = nlmsg_put(skb_out, 0, 0, NLMSG_DONE, len+4, 0);
     NETLINK_CB(skb_out).dst_group = 0;
     // fill data
-    *(__u32 *)NLMSG_DATA(nlh) = __u32(len);
+    *(u32 *)NLMSG_DATA(nlh) = len;
     strncpy((char *)NLMSG_DATA(nlh)+4, buf, len);
 
-    printk("Send msg to user space!\n")
+    printk("Send msg to user space!\n");
     return nlmsg_unicast(netlink_socket, skb_out, pid);
 }
 
@@ -70,12 +71,15 @@ int k2u_send(char *buf, size_t len)
  */
 static void netlink_message_handle(struct sk_buff *skb)
 {
+    u8 *buf = NULL;
+
     // get prm_nlmsg
     struct prm_nlmsg *msg = (struct prm_nlmsg *) skb->data;
     // set pid
     pid = msg->nlh.nlmsg_pid;
     // get data, store in buf
-    __u8 *buf = malloc(PAYLOAD_MAX_SIZE);
+    
+    buf = kmalloc(PAYLOAD_MAX_SIZE, GFP_KERNEL);
     strncpy(buf, (char *)msg->msg_data, (size_t)msg->msg_len);
 
     printk("Netlink info get!\n");
@@ -84,7 +88,7 @@ static void netlink_message_handle(struct sk_buff *skb)
     // @param buf, msg_len 
     k2u_send(buf, msg->msg_len);
 
-    free(buf);
+    kfree(buf);
 }
 
 
