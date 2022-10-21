@@ -53,8 +53,8 @@ int u2k_socket_init()
         return PRM_ERROR;
     }
     
-    // debug point
-    if(sizeof(struct prm_nlmsg) != NLMSG_SPACE(1024+4)) perror("nlmsg space error\n");
+    // debug
+    // if(sizeof(struct prm_nlmsg) != NLMSG_SPACE(1024+4)) perror("nlmsg space error\n");
     
     // fill msg head info
     msg = (struct prm_nlmsg *)malloc(sizeof(struct prm_nlmsg));
@@ -87,6 +87,7 @@ int u2k_socket_init()
         perror("kernel_addr malloc failed!\n");
         return PRM_ERROR;
     }
+    memset(kernel_addr, 0, sizeof(struct sockaddr_nl));
     kernel_addr->nl_family = AF_NETLINK;
     kernel_addr->nl_pid = 0;     // kernel process pid
     kernel_addr->nl_groups = 0;
@@ -95,6 +96,7 @@ int u2k_socket_init()
     int ret = bind(netlink_socket, (struct sockaddr *) user_addr, sizeof(struct sockaddr_nl));
     if (ret == -1)
     {
+        perror("bind error\n");
         return PRM_ERROR;
     }
     return PRM_SUCCESS;
@@ -169,24 +171,24 @@ ssize_t u2k_recv(char *buf, size_t buflen)
     }
 
     ssize_t len = -1;
-    struct prm_nlmsg msg;
+    struct prm_nlmsg recv_msg;
     // recv msg
     socklen_t kernel_addrlen = sizeof(struct sockaddr_nl);
-    len = recvfrom(netlink_socket, &msg, sizeof(struct prm_nlmsg), 0, (struct sockaddr *)kernel_addr, &kernel_addrlen);
+    len = recvfrom(netlink_socket, &recv_msg, sizeof(struct prm_nlmsg), 0, (struct sockaddr *)kernel_addr, &kernel_addrlen);
 
     if(len == -1)
     {
         perror("u2k recv failed!\n");
         return PRM_ERROR;
     }
-    if(buflen < msg.msg_len)
+    if(buflen < recv_msg.msg_len)
     {
         perror("u2k recv failed, buf is too short!\n");
         return PRM_ERROR;
     }
 
-    strncpy(buf, msg.msg_data, msg.msg_len);
-    return msg.msg_len;
+    strncpy(buf, recv_msg.msg_data, recv_msg.msg_len);
+    return recv_msg.msg_len;
 }
 
 int main ()

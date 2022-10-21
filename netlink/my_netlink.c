@@ -53,8 +53,8 @@ pid_t pid = -1;     // pid is int
  */
 int k2u_send(char *buf, size_t len)
 {
-    struct sk_buff *skb_out = nlmsg_new(len+4, GFP_KERNEL);
-    struct nlmsghdr *nlh = nlmsg_put(skb_out, 0, 0, NLMSG_DONE, len+4, 0);
+    struct sk_buff *skb_out = nlmsg_new(PAYLOAD_MAX_SIZE+4, GFP_KERNEL);
+    struct nlmsghdr *nlh = nlmsg_put(skb_out, 0, 0, NLMSG_DONE, PAYLOAD_MAX_SIZE+4, 0);
     NETLINK_CB(skb_out).dst_group = 0;
     // fill data
     *(u32 *)NLMSG_DATA(nlh) = len;
