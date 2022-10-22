@@ -20,7 +20,6 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include "ncheck.c"
 
 // 服务器使用的socket路径
 #define SOCK_PATH "/tmp/server.socket"
@@ -60,7 +59,7 @@ struct rsp
  */
 void success()
 {
-    rspbuf.stat = 0;
+    rspbuf.stat = 1;
     send(client_sock, &rspbuf, rsp_len, 0);
 }
 
