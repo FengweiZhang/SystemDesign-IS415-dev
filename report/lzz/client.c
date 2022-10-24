@@ -9,7 +9,7 @@
  */
 #include <sys/un.h>
 #include <sys/socket.h>
-#include <sys/type.h>
+#include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -52,7 +52,7 @@ struct rsp
 
 // 文件路径
 char filepath[4092];
-unsigned char[255] username;
+unsigned char username[255];
 
 /**
  * @brief 客户端的主要处理函数
@@ -107,6 +107,7 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid)
         exit(1);
     }
 
+    printf("send message");
     // 发送请求
     rc = send(client_sock, &reqbuf, sizeof(struct req), 0);
     if (rc == -1)
@@ -117,7 +118,8 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid)
     }
 
     // 接受数据并处理结果
-    rc = recv(client_sock, &rspbuf, sizeof(union rsp), 0);
+    rc = recv(client_sock, &rspbuf, sizeof(struct rsp), 0);
+    printf("receive message");
 
     if (rc == -1)
     {
@@ -127,7 +129,7 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid)
     }
 
     // 处理结果
-    switch (rc->stat)
+    switch (rspbuf.stat)
     {
     case 1:
         printf("success!");
@@ -177,25 +179,25 @@ int main(int argc, char **argv)
         switch (ch)
         {
         case 'f':
-            option = 1;
             if (option != 0)
             {
                 usage();
             }
+            option = 1;
             memset(filepath, 0, 4096);
             memcpy(filepath, optarg, strlen(optarg));
             break;
         case 'u':
-            option = 2;
             if (option != 0)
             {
                 usage();
             }
+            option = 2;
             memset(username, 0, 255);
             memcpy(username, optarg, strlen(optarg));
             break;
         case 'l':
-            level = optarg;
+            level = optarg[0];
             // level只能是特定的几个值，否则调用usage
             break;
         default:
@@ -214,14 +216,14 @@ int main(int argc, char **argv)
     if (option == 1)
     {
         // 检查文件状态并处理
-        if (!stat(filename, &file_stat))
+        if (!stat(filepath, &file_stat))
         {
             // 获得文件的inode节点号
             inode = file_stat.st_ino;
         }
         else
         {
-            printf("%s: No such file or directory\n", filename);
+            printf("%s: No such file or directory\n", filepath);
         }
     }
     // 对于用户名来说不存在要不要报错
@@ -238,6 +240,7 @@ int main(int argc, char **argv)
         }
     }
 
+    printf("start handle");
     handle(option, inode, uid);
 
     return 0;
