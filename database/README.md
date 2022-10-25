@@ -1,0 +1,1 @@
+`[col_name1, col_name2, ..., col_nameN, val1, val2, ... valN, ..., val1, val2, ... valN,]`
