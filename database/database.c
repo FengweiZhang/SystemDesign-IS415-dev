@@ -1,8 +1,17 @@
+/**
+ * @file database.c
+ * @author 钟睿哲 (zhongruizhe271828@foxmail.com, zerzerzerz271828@sjtu.edu.cn)
+ * @brief functions for database operation
+ * @date 2022-10-25
+ * @copyright Copyright (c) 2022
+ *
+ */
 #include <stdio.h>
 #include <sqlite3.h>
 #include <string.h>
 #include <stdlib.h>
 
+// max length for each SQL command
 #define SQL_MAX_LEN 1024
 
 static int callback(void*flag, int n_col, char**data, char**col_name){
@@ -14,12 +23,14 @@ static int callback(void*flag, int n_col, char**data, char**col_name){
     return 0;
 }
 
+// db_name: path to database
 int db_open_db(const char* db_name, sqlite3** db){
     // int res_code = -1;
     // res_code = sqlite3_open(db_name, db);
     // return res_code;
     return sqlite3_open(db_name, db);
 }
+
 
 int db_close_db(sqlite3* db){
     // int res_code = -1;
@@ -28,6 +39,9 @@ int db_close_db(sqlite3* db){
     return sqlite3_close(db);
 }
 
+// table: name of table
+// id: id of user/object
+// level: corresponding right
 int db_insert_right(sqlite3* db, char* table, char* id, int level){
     //insert into <table> (id,level) values('<id>',<level>);
     char sql[SQL_MAX_LEN];
@@ -78,7 +92,6 @@ int main(){
     int rc = -1;
     char *err_msg = 0;
 
-
     rc = db_open_db("database.db", &db);
     int res = db_search_right(db, "user_file", "1");
     printf("level for user_file=1 is %d\n", res);
@@ -92,7 +105,28 @@ int main(){
     res = db_search_right(db, "user_file", "123");
     printf("level for user_file=123 is %d\n", res);
     db_update_right(db, "user_file", "123", 1000);
-    // user_file
+
+    char* sql4 = "select id,level from user_file;";
+    char** result;
+    int n_row;
+    int n_col;
+    int k = -1;
+
+    sqlite3_get_table(db, sql4, &result, &n_row, &n_col, &err_msg);
+    k = n_col;
+    for(int i=0; i<n_row; ++i){
+        for(int j=0; j<n_col; ++j){
+            printf("%s: %s\n", result[j], result[n_col+i*n_col+j]);
+        }
+        printf("------------------------\n");
+    }
+
+    
+
+    rc = db_close_db(db);
+    return 0;
+
+        // user_file
     // file
     // user_process
     // process
@@ -129,28 +163,4 @@ int main(){
 
     // char* sql3 = "select * from company;";
     // sqlite3_exec(db, sql3, callback, 0, &err_msg);
-
-
-    
-
-    char* sql4 = "select id,level from user_file;";
-    char** result;
-    int n_row;
-    int n_col;
-    int k = -1;
-
-    sqlite3_get_table(db, sql4, &result, &n_row, &n_col, &err_msg);
-    k = n_col;
-    for(int i=0; i<n_row; ++i){
-        for(int j=0; j<n_col; ++j){
-            printf("%s: %s\n", result[j], result[n_col+i*n_col+j]);
-        }
-        printf("------------------------\n");
-    }
-
-    
-
-    rc = db_close_db(db);
-    // printf("%d\n", rc);
-    return 0;
 }
