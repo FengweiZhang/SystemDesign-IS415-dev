@@ -1,5 +1,5 @@
 /**
- * @file database.c
+ * @file database.h
  * @author 钟睿哲 (zhongruizhe271828@foxmail.com, zerzerzerz271828@sjtu.edu.cn)
  * @brief functions for database operation
  * @date 2022-10-25
@@ -26,8 +26,10 @@ static int callback(void*flag, int n_col, char**data, char**col_name){
     printf("\n");
     return 0;
 }
-
-// db_name: path to database
+/**
+    @param db_name name of database
+    @param db database
+**/
 int db_open_db(const char* db_name, sqlite3** db){
     return sqlite3_open(db_name, db);
 }
@@ -37,9 +39,13 @@ int db_close_db(sqlite3* db){
     return sqlite3_close(db);
 }
 
-// table: name of table
-// id: id of user/object
-// level: corresponding right
+/**
+    @brief insert a row into database's table, assign a right level of an user/object
+    @param db database
+    @param table name of table in database
+    @param id id of an user or an object
+    @param level the right level of corresponding user/object
+**/
 int db_insert_right(sqlite3* db, char* table, char* id, int level){
     //insert into <table> (id,level) values('<id>',<level>);
     char sql[SQL_MAX_LEN];
@@ -48,7 +54,12 @@ int db_insert_right(sqlite3* db, char* table, char* id, int level){
     return sqlite3_exec(db, sql, callback, NULL, &err_msg);
 }
 
-
+/**
+    @brief delete the level of an user/object
+    @param db database
+    @param table name of table in database
+    @param id id of an user or an object
+**/
 int db_delete_right(sqlite3* db, char* table, char* id){
     char* err_msg;
     char sql[SQL_MAX_LEN];
@@ -56,7 +67,13 @@ int db_delete_right(sqlite3* db, char* table, char* id){
     return sqlite3_exec(db, sql, callback, NULL, &err_msg);
 }
 
-
+/**
+    @brief update the right level of an user/object
+    @param db database
+    @param table name of table in database
+    @param id id of an user or an object
+    @param level the right level of corresponding user/object
+**/
 int db_update_right(sqlite3* db, char* table, char* id, int level){
     char* err_msg;
     char sql[SQL_MAX_LEN];
@@ -64,7 +81,13 @@ int db_update_right(sqlite3* db, char* table, char* id, int level){
     return sqlite3_exec(db, sql, callback, NULL, &err_msg);
 }
 
-
+/**
+    @brief given id, search the right of corresponding user/object
+    @param db database
+    @param table name of table in database
+    @param id id of an user or an object
+    @return the level, which is int type
+**/
 int db_search_right(sqlite3* db, char* table, char* id){
     // select level from <table> where id = <id>;
     char sql[SQL_MAX_LEN];
