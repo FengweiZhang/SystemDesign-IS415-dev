@@ -59,6 +59,11 @@ int main(){
         db_show_table(db, tables[i]);
     }
 
+    db_set_right(db, "user_file", "123456", 16);
+    db_show_table(db, "user_file");
+    db_set_right(db, "user_file", "123456", 456456);
+    db_show_table(db, "user_file");
+
     rc = db_close_db(db);
     return 0;
 

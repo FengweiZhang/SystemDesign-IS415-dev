@@ -119,7 +119,28 @@ int db_search_right(sqlite3* db, char* table, char* id){
 
     sqlite3_get_table(db, sql, &result, &n_row, &n_col, &err_msg);
     return atoi(result[n_col]);
+}
 
+
+/**
+ * @brief set the level user/object. If exists, update level, else insert new level
+ * **/
+int db_set_right(sqlite3* db, char* table, char* id, int level){
+    char sql[SQL_MAX_LEN];
+    sprintf(sql, "select level from %s where id = %s;", table, id);
+
+    char** result;
+    char* err_msg;
+    int n_row;
+    int n_col;
+
+    sqlite3_get_table(db, sql, &result, &n_row, &n_col, &err_msg);
+    if(n_row == 0){
+        return db_insert_right(db, table, id, level);
+    }
+    else{
+        return db_update_right(db, table, id, level);
+    }
 }
 
 /**
