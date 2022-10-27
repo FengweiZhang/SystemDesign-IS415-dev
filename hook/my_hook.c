@@ -39,6 +39,7 @@ static int test_hook_init(void)
     // printk("sys_call_ptr: 0x%lu\n", *sys_call_ptr);
     printk("Found at 0x%px \n", get_sys_call_table());
     // try yi xia
+    // try liangxia
     
 
 
