@@ -12,16 +12,26 @@ MODULE_VERSION("0.1");
 #include <linux/kprobes.h>
 
 
-// define function pointer 
+#include "../common/prm_error.h"
+
+// define a function pointer 
 typedef void (* sys_call_ptr_t)(void);
 
+// system call table pointer 
+sys_call_ptr_t *sys_call_ptr = NULL;
+
+// a struct used to get sys call table position
 static struct kprobe kp = {
     .symbol_name = "kallsyms_lookup_name"
 };
 
-sys_call_ptr_t *sys_call_ptr = NULL;
+unsigned long cr0 = 0;
 
-
+/**
+ * @brief Get the sys call table position
+ * 
+ * @return sys_call_ptr_t* 
+ */
 static sys_call_ptr_t* get_sys_call_table(void)
 {
     // cannot be used  in kernels > 5.7
@@ -34,12 +44,11 @@ static sys_call_ptr_t* get_sys_call_table(void)
 
 static int test_hook_init(void)
 {
+    // get syscall table position
     register_kprobe(&kp);
-    // sys_call_ptr = get_sys_call_table();
-    // printk("sys_call_ptr: 0x%lu\n", *sys_call_ptr);
-    printk("Found at 0x%px \n", get_sys_call_table());
-    // try yi xia
-    // try liangxia
+    sys_call_ptr = get_sys_call_table();
+    // printk("sys_call_table found at 0x%px \n", sys_call_ptr);
+
     
 
 
