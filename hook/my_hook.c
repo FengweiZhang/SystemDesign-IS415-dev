@@ -43,14 +43,14 @@ static sys_call_ptr_t* get_sys_call_table(void)
     return (sys_call_ptr_t*)kp.addr;
 }
 
-typedef asmlinkage long (*sys_read_t)(struct pt_regs * reg);
+typedef asmlinkage long (*sys_openat_t)(struct pt_regs * reg);
 
-sys_read_t real_read;
+sys_openat_t real_openat;
 
-asmlinkage long my_sys_read(struct pt_regs * reg)
+asmlinkage long my_sys_openat(struct pt_regs * reg)
 {
     printk("Hook success");
-    return real_read(reg);
+    return real_openat(reg);
 }
 
 // change linux kernel memory write protection
@@ -78,8 +78,8 @@ static int test_hook_init(void)
     // printk("sys_call_table found at 0x%px \n", sys_call_ptr);
 
     write_protection_off();
-    real_read = (void *)sys_call_ptr[__NR_read];
-    sys_call_ptr[__NR_read] = (sys_call_ptr_t)my_sys_read;
+    real_openat = (void *)sys_call_ptr[__NR_openat];
+    sys_call_ptr[__NR_openat] = (sys_call_ptr_t)my_sys_openat;
     write_protection_on();
 
     return 0;
@@ -90,7 +90,7 @@ static void test_hook_exit(void)
 {
 
     write_protection_off();
-    sys_call_ptr[__NR_read] = (sys_call_ptr_t)real_read;
+    sys_call_ptr[__NR_openat] = (sys_call_ptr_t)real_openat;
     write_protection_on();
 
     unregister_kprobe(&kp);
