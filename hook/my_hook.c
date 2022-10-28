@@ -52,12 +52,22 @@ asmlinkage long my_sys_chmod(const char __user *filename, umode_t mode)
     return real_chmod(filename, mode);
 }
 
+// change linux kernel memory write protection
 extern unsigned long __force_order ;
 inline void write_cr0_new(unsigned long cr0) 
 {
-    __asm__ volatile("mov %0,%%cr0" : "+r"(cr0), "+m"(__force_order));
+    asm volatile("mov %0,%%cr0" : "+r"(cr0), "+m"(__force_order));
 }
-
+// write protextion off
+void write_protection_off(void)
+{
+    write_cr0_new(read_cr0() & (~0x10000));
+}
+// write protection on
+void write_protection_on(void)
+{
+    write_cr0_new(read_cr0() | 0x10000);
+}
 
 static int test_hook_init(void)
 {
@@ -66,17 +76,10 @@ static int test_hook_init(void)
     sys_call_ptr = get_sys_call_table();
     // printk("sys_call_table found at 0x%px \n", sys_call_ptr);
 
+    write_protection_off();
     // real_chmod = (void *)sys_call_ptr[__NR_chmod];
     // sys_call_ptr[__NR_chmod] = (sys_call_ptr_t)my_sys_chmod;
-
-    unsigned long cr0 = read_cr0();
-    printk("CR0: %016lx", cr0);
-
-    write_cr0_new(read_cr0() & (~0x10000));
-    printk("disable: %016lx", read_cr0());
-
-    write_cr0_new(read_cr0() | (0x10000));
-    printk("enable: %016lx", read_cr0());
+    write_protection_on();
 
     return 0;
 }
