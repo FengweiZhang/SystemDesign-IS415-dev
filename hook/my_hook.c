@@ -49,7 +49,7 @@ sys_openat_t real_openat;
 
 asmlinkage long my_sys_openat(struct pt_regs * reg)
 {
-    printk("Hook success");
+    printk("Hook success\n");
     return real_openat(reg);
 }
 
@@ -81,6 +81,8 @@ static int test_hook_init(void)
     real_openat = (void *)sys_call_ptr[__NR_openat];
     sys_call_ptr[__NR_openat] = (sys_call_ptr_t)my_sys_openat;
     write_protection_on();
+
+    printk("Yes\n");
 
     return 0;
 }
