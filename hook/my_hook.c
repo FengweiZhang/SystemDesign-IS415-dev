@@ -13,6 +13,7 @@ MODULE_VERSION("0.1");
 #include <linux/kprobes.h>
 #include <linux/syscalls.h>
 #include <asm/unistd_64.h>
+#include <asm/ptrace.h>
 
 
 #include "../common/prm_error.h"
@@ -42,14 +43,14 @@ static sys_call_ptr_t* get_sys_call_table(void)
     return (sys_call_ptr_t*)kp.addr;
 }
 
-typedef asmlinkage long (*sys_open_t)(unsigned int fd, char __user *buf, size_t count);
+typedef asmlinkage long (*sys_read_t)(struct pt_regs * reg);
 
-sys_open_t real_read;
+sys_read_t real_read;
 
-asmlinkage long my_sys_read(unsigned int fd, char __user *buf, size_t count)
+asmlinkage long my_sys_read(struct pt_regs * reg)
 {
     printk("Hook success");
-    return real_read(fd, buf, count);
+    return real_read(reg);
 }
 
 // change linux kernel memory write protection
