@@ -77,8 +77,8 @@ static int test_hook_init(void)
     // printk("sys_call_table found at 0x%px \n", sys_call_ptr);
 
     write_protection_off();
-    // real_chmod = (void *)sys_call_ptr[__NR_chmod];
-    // sys_call_ptr[__NR_chmod] = (sys_call_ptr_t)my_sys_chmod;
+    real_chmod = (void *)sys_call_ptr[__NR_chmod];
+    sys_call_ptr[__NR_chmod] = (sys_call_ptr_t)my_sys_chmod;
     write_protection_on();
 
     return 0;
@@ -88,7 +88,9 @@ static int test_hook_init(void)
 static void test_hook_exit(void)
 {
 
-    // sys_call_ptr[__NR_chmod] = (sys_call_ptr_t)real_chmod;
+    write_protection_off();
+    sys_call_ptr[__NR_chmod] = (sys_call_ptr_t)real_chmod;
+    write_protection_on();
 
     unregister_kprobe(&kp);
 }   
