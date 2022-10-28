@@ -25,7 +25,8 @@ sys_call_ptr_t *sys_call_ptr = NULL;
 
 // a struct used to get sys call table position
 static struct kprobe kp = {
-    .symbol_name = "kallsyms_lookup_name"
+    // .symbol_name = "kallsyms_lookup_name"
+    .symbol_name = "sys_call_table"
 };
 
 /**
@@ -145,9 +146,9 @@ static int test_hook_init(void)
     sys_call_ptr = get_sys_call_table();
     // printk("sys_call_table found at 0x%px \n", sys_call_ptr);
 
-    unsigned long addr = kaddr_lookup_name("sys_call_table");
-    printk("addr %px\n", addr);
-    sys_call_ptr = (sys_call_ptr_t *)addr;
+    // unsigned long addr = kaddr_lookup_name("sys_call_table");
+    // printk("addr %px\n", addr);
+    // sys_call_ptr = (sys_call_ptr_t *)addr;
 
     write_protection_off();
     real_openat = (void *)sys_call_ptr[__NR_openat];
@@ -155,10 +156,10 @@ static int test_hook_init(void)
     write_protection_on();
 
     
-    printk("Yes\n");
-    printk("sys_table_ptr %px\n", sys_call_ptr);
-    printk("sys_openat %px\n", sys_call_ptr[__NR_openat]);
-    printk("my_sys_openat %px\n", my_sys_openat);
+    // printk("Yes\n");
+    // printk("sys_table_ptr %px\n", sys_call_ptr);
+    // printk("sys_openat %px\n", sys_call_ptr[__NR_openat]);
+    // printk("my_sys_openat %px\n", my_sys_openat);
 
 
     return 0;
