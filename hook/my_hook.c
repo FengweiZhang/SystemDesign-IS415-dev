@@ -42,14 +42,14 @@ static sys_call_ptr_t* get_sys_call_table(void)
     return (sys_call_ptr_t*)kp.addr;
 }
 
-typedef asmlinkage long (*sys_open_t)(const char __user *filename, umode_t mode);
+typedef asmlinkage long (*sys_open_t)(unsigned int fd, char __user *buf, size_t count);
 
-sys_open_t real_chmod;
+sys_open_t real_read;
 
-asmlinkage long my_sys_chmod(const char __user *filename, umode_t mode)
+asmlinkage long my_sys_read(unsigned int fd, char __user *buf, size_t count)
 {
     printk("Hook success");
-    return real_chmod(filename, mode);
+    return real_read(fd, buf, count);
 }
 
 // change linux kernel memory write protection
@@ -77,8 +77,8 @@ static int test_hook_init(void)
     // printk("sys_call_table found at 0x%px \n", sys_call_ptr);
 
     write_protection_off();
-    real_chmod = (void *)sys_call_ptr[__NR_chmod];
-    sys_call_ptr[__NR_chmod] = (sys_call_ptr_t)my_sys_chmod;
+    real_read = (void *)sys_call_ptr[__NR_read];
+    sys_call_ptr[__NR_read] = (sys_call_ptr_t)my_sys_read;
     write_protection_on();
 
     return 0;
@@ -89,7 +89,7 @@ static void test_hook_exit(void)
 {
 
     write_protection_off();
-    sys_call_ptr[__NR_chmod] = (sys_call_ptr_t)real_chmod;
+    sys_call_ptr[__NR_read] = (sys_call_ptr_t)real_read;
     write_protection_on();
 
     unregister_kprobe(&kp);
