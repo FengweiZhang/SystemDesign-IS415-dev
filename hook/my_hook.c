@@ -15,7 +15,6 @@ MODULE_VERSION("0.1");
 #include <asm/unistd_64.h>
 #include <asm/ptrace.h>
 
-
 #include "../common/prm_error.h"
 
 // define a function pointer 
@@ -83,6 +82,8 @@ static int test_hook_init(void)
     write_protection_on();
 
     printk("Yes\n");
+    printk("sys_table_ptr %px\n", sys_call_ptr);
+    printk("sys_read %px\n", sys_call_ptr[__NR_openat]);
 
     return 0;
 }
