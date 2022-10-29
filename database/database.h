@@ -19,6 +19,16 @@
 #define SQL_MAX_LEN 1024
 #define DATABASE_PATH "./database.db"
 
+// define table name in database
+#define TABLE_FILE "file"
+#define TABLE_USER_FILE "user_file"
+#define TABLE_PROCESS "process"
+#define TABLE_USER_PROCESS "user_process"
+
+// define other signals
+#define SEPARATOR "*************************************************\n"
+
+
 static int callback(void*flag, int n_col, char**data, char**col_name){
     // if(flag==NULL) return 0;
     for(int i=0; i<n_col; ++i){
@@ -154,6 +164,7 @@ int db_show_table(sqlite3* db, char* table){
     char **result;
     char* err_msg;
     int n_row, n_col;
+    printf(SEPARATOR);
     printf("table: %s\n", table);
     sqlite3_get_table(db, sql, &result, &n_row, &n_col, &err_msg);
     for(int i=0; i<n_row; ++i){
@@ -162,5 +173,6 @@ int db_show_table(sqlite3* db, char* table){
         }
         printf("\n");
     }
+    printf(SEPARATOR);
     return 0;
 }

@@ -28,46 +28,39 @@ int main(){
     printf("level for user_file=123 is %d\n", res);
     db_update_right(db, "user_file", "123", 1000);
 
-    // char* sql4 = "select id,level from user_file;";
-    // char** result;
-    // int n_row;
-    // int n_col;
-    // int k = -1;
-
-    // sqlite3_get_table(db, sql4, &result, &n_row, &n_col, &err_msg);
-    // k = n_col;
-    // for(int i=0; i<n_row; ++i){
-    //     for(int j=0; j<n_col; ++j){
-    //         printf("%s: %s\n", result[j], result[n_col+i*n_col+j]);
-    //     }
-    //     printf("------------------------\n");
-    // }
+    
     db_create_table(db, "test");
     db_insert_right(db, "test", "zrz", 1);
     db_insert_right(db, "test", "lzz", 2);
     db_insert_right(db, "test", "zfw", 3);
-    // db_insert_right(db, "test", "zfw", 5);
 
-    char* tables[] = {
-        "file",
-        "user_file",
-        "process",
-        "user_process",
-        "test"
-    };
-    for(int i=0; i<5; ++i){
-        db_show_table(db, tables[i]);
-    }
+    
 
     db_set_right(db, "user_file", "123456", 16);
     db_show_table(db, "user_file");
     db_set_right(db, "user_file", "123456", 456456);
     db_show_table(db, "user_file");
 
+    db_show_table(db, TABLE_FILE);
+    db_show_table(db, TABLE_USER_FILE);
+    db_show_table(db, TABLE_PROCESS);
+    db_show_table(db, TABLE_USER_PROCESS);
+
     rc = db_close_db(db);
     return 0;
 
-        // user_file
+    // char* tables[] = {
+    //     "file",
+    //     "user_file",
+    //     "process",
+    //     "user_process",
+    //     "test"
+    // };
+    // for(int i=0; i<5; ++i){
+    //     db_show_table(db, tables[i]);
+    // }
+
+    // user_file
     // file
     // user_process
     // process
@@ -104,4 +97,20 @@ int main(){
 
     // char* sql3 = "select * from company;";
     // sqlite3_exec(db, sql3, callback, 0, &err_msg);
+
+
+    // char* sql4 = "select id,level from user_file;";
+    // char** result;
+    // int n_row;
+    // int n_col;
+    // int k = -1;
+
+    // sqlite3_get_table(db, sql4, &result, &n_row, &n_col, &err_msg);
+    // k = n_col;
+    // for(int i=0; i<n_row; ++i){
+    //     for(int j=0; j<n_col; ++j){
+    //         printf("%s: %s\n", result[j], result[n_col+i*n_col+j]);
+    //     }
+    //     printf("------------------------\n");
+    // }
 }
