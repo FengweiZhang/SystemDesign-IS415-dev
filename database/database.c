@@ -9,108 +9,150 @@
 
 #include "database.h"
 
-int main(){
-    sqlite3* db;
-    int rc = -1;
-    char *err_msg = 0;
-
-    rc = db_open_db(DATABASE_PATH, &db);
-    int res = db_search_right(db, "user_file", "1");
-    printf("level for user_file=1 is %d\n", res);
-
-    db_insert_right(db, "user_file", "43", 43);
-    res = db_search_right(db, "user_file", "43");
-    printf("level for user_file=43 is %d\n", res);
-    db_delete_right(db, "user_file", "43");
-
-    db_insert_right(db, "user_file", "123", 123);
-    res = db_search_right(db, "user_file", "123");
-    printf("level for user_file=123 is %d\n", res);
-    db_update_right(db, "user_file", "123", 1000);
-
-    
-    db_create_table(db, "test");
-    db_insert_right(db, "test", "zrz", 1);
-    db_insert_right(db, "test", "lzz", 2);
-    db_insert_right(db, "test", "zfw", 3);
-
-    
-
-    db_set_right(db, "user_file", "123456", 16);
-    db_show_table(db, "user_file");
-    db_set_right(db, "user_file", "123456", 456456);
-    db_show_table(db, "user_file");
-
-    db_show_table(db, TABLE_FILE);
-    db_show_table(db, TABLE_USER_FILE);
-    db_show_table(db, TABLE_PROCESS);
-    db_show_table(db, TABLE_USER_PROCESS);
-
-    rc = db_close_db(db);
+static int callback(void*flag, int n_col, char**data, char**col_name){
+    // if(flag==NULL) return 0;
+    for(int i=0; i<n_col; ++i){
+        printf("%s = %s\n", col_name[i], data[i]?data[i]:"NULL");
+    }
+    printf("\n");
     return 0;
-
-    // char* tables[] = {
-    //     "file",
-    //     "user_file",
-    //     "process",
-    //     "user_process",
-    //     "test"
-    // };
-    // for(int i=0; i<5; ++i){
-    //     db_show_table(db, tables[i]);
-    // }
-
-    // user_file
-    // file
-    // user_process
-    // process
-
-    // char* sql = "create table process (id char(50) primary key not null, level int not null);";
-    // char* sql2 = "insert into process (id,level) values('0',0);";
-    // char* sql3 = "insert into process (id,level) values('1',1);";
-    // sqlite3_exec(db, sql, callback, NULL, &err_msg);
-    // sqlite3_exec(db, sql2, callback, NULL, &err_msg);
-    // sqlite3_exec(db, sql3, callback, NULL, &err_msg);
+}
 
 
+/**
+ * @brief create a new table in database
+ * @param db sqlite3 database
+ * @param table name of table to create
+**/
+int db_create_table(sqlite3* db, char* table){
+    char sql[SQL_MAX_LEN];
+    char* err_msg;
+    sprintf(sql, "create table %s (id char(50) primary key not null, level int not null);", table);
+    return sqlite3_exec(db, sql, callback, NULL, &err_msg);
+}
 
 
-    // printf("%d\n", rc);
-
-    // char* sql = "CREATE TABLE COMPANY("  \
-    //     "ID INT PRIMARY KEY     NOT NULL," \
-    //     "NAME           TEXT    NOT NULL," \
-    //     "AGE            INT     NOT NULL," \
-    //     "ADDRESS        CHAR(50)," \
-    //     "SALARY         REAL );";
-    // sqlite3_exec(db, sql, callback, NULL, &err_msg);
-
-    // char* sql2 = "INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) "  \
-    //     "VALUES (1, 'Paul', 32, 'California', 20000.00 ); " \
-    //     "INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) "  \
-    //     "VALUES (2, 'Allen', 25, 'Texas', 15000.00 ); "     \
-    //     "INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY)" \
-    //     "VALUES (3, 'Teddy', 23, 'Norway', 20000.00 );" \
-    //     "INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY)" \
-    //     "VALUES (4, 'Mark', 25, 'Rich-Mond ', 65000.00 );";
-    // sqlite3_exec(db, sql2, callback, NULL, &err_msg);
-
-    // char* sql3 = "select * from company;";
-    // sqlite3_exec(db, sql3, callback, 0, &err_msg);
+/**
+    @param db_name name of database
+    @param db database
+**/
+int db_open_db(const char* db_name, sqlite3** db){
+    return sqlite3_open(db_name, db);
+}
 
 
-    // char* sql4 = "select id,level from user_file;";
-    // char** result;
-    // int n_row;
-    // int n_col;
-    // int k = -1;
+int db_close_db(sqlite3* db){
+    return sqlite3_close(db);
+}
 
-    // sqlite3_get_table(db, sql4, &result, &n_row, &n_col, &err_msg);
-    // k = n_col;
-    // for(int i=0; i<n_row; ++i){
-    //     for(int j=0; j<n_col; ++j){
-    //         printf("%s: %s\n", result[j], result[n_col+i*n_col+j]);
-    //     }
-    //     printf("------------------------\n");
-    // }
+/**
+    @brief insert a row into database's table, assign a right level of an user/object
+    @paragraph if the id is existed in table, the right will not be updated
+    @param db database
+    @param table name of table in database
+    @param id id of an user or an object
+    @param level the right level of corresponding user/object
+**/
+int db_insert_right(sqlite3* db, char* table, char* id, int level){
+    //insert into <table> (id,level) values('<id>',<level>);
+    char sql[SQL_MAX_LEN];
+    char* err_msg;
+    sprintf(sql, "insert into %s (id,level) values('%s',%d);", table, id, level);
+    return sqlite3_exec(db, sql, callback, NULL, &err_msg);
+}
+
+
+/**
+    @brief delete the level of an user/object
+    @param db database
+    @param table name of table in database
+    @param id id of an user or an object
+**/
+int db_delete_right(sqlite3* db, char* table, char* id){
+    char* err_msg;
+    char sql[SQL_MAX_LEN];
+    sprintf(sql,"delete from %s where id = %s;", table, id);
+    return sqlite3_exec(db, sql, callback, NULL, &err_msg);
+}
+
+
+/**
+    @brief update the right level of an user/object
+    @param db database
+    @param table name of table in database
+    @param id id of an user or an object
+    @param level the right level of corresponding user/object
+**/
+int db_update_right(sqlite3* db, char* table, char* id, int level){
+    char* err_msg;
+    char sql[SQL_MAX_LEN];
+    sprintf(sql, "update %s set level = %d where id = %s;", table, level, id);
+    return sqlite3_exec(db, sql, callback, NULL, &err_msg);
+}
+
+
+/**
+    @brief given id, search the right of corresponding user/object
+    @param db database
+    @param table name of table in database
+    @param id id of an user or an object
+    @return the level, which is int type
+**/
+int db_search_right(sqlite3* db, char* table, char* id){
+    // select level from <table> where id = <id>;
+    char sql[SQL_MAX_LEN];
+    sprintf(sql,"select level from %s where id = %s;", table, id);
+    char** result;
+    char* err_msg;
+    int n_row;
+    int n_col;
+
+    sqlite3_get_table(db, sql, &result, &n_row, &n_col, &err_msg);
+    return atoi(result[n_col]);
+}
+
+
+/**
+ * @brief set the level user/object. If exists, update level, else insert new level
+ * **/
+int db_set_right(sqlite3* db, char* table, char* id, int level){
+    char sql[SQL_MAX_LEN];
+    sprintf(sql, "select level from %s where id = %s;", table, id);
+
+    char** result;
+    char* err_msg;
+    int n_row;
+    int n_col;
+
+    sqlite3_get_table(db, sql, &result, &n_row, &n_col, &err_msg);
+    if(n_row == 0){
+        return db_insert_right(db, table, id, level);
+    }
+    else{
+        return db_update_right(db, table, id, level);
+    }
+}
+
+/**
+    @brief show a table in database
+    @param db sqlite3 database
+    @param table name of table
+**/
+int db_show_table(sqlite3* db, char* table){
+    char sql[SQL_MAX_LEN];
+    sprintf(sql, "select * from %s;", table);
+    char **result;
+    char* err_msg;
+    int n_row, n_col;
+    printf(SEPARATOR);
+    printf("table: %s\n", table);
+    sqlite3_get_table(db, sql, &result, &n_row, &n_col, &err_msg);
+    for(int i=0; i<n_row; ++i){
+        for(int j=0; j<n_col; ++j){
+            printf("%s=%-5s ", result[j], result[n_col+i*n_col+j]);
+        }
+        printf("\n");
+    }
+    printf(SEPARATOR);
+    return 0;
 }
