@@ -92,7 +92,7 @@ int db_update_right(sqlite3* db, char* table, char* id, int level){
 
 
 /**
-    @brief given id, search the right of corresponding user/object
+    @brief given id, search the right of corresponding user/object. If not exists, return -1
     @param db database
     @param table name of table in database
     @param id id of an user or an object
@@ -106,9 +106,8 @@ int db_search_right(sqlite3* db, char* table, char* id){
     char* err_msg;
     int n_row;
     int n_col;
-
     sqlite3_get_table(db, sql, &result, &n_row, &n_col, &err_msg);
-    return atoi(result[n_col]);
+    return (n_row>0) ? atoi(result[n_col]) : OBJECT_NOT_DEFINE;
 }
 
 

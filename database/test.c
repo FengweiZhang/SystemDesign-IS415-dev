@@ -15,18 +15,26 @@ int main(){
     char *err_msg = 0;
 
     rc = db_open_db(DATABASE_PATH, &db);
-    int res = db_search_right(db, "user_file", "1");
+    db_show_table(db, TABLE_USER_FILE);
+    char user_id[1024];
+    printf("Please enter user id:");
+    scanf("%s", user_id);
+    int res = db_search_right(db, TABLE_USER_FILE, user_id);
+    printf("Level for user %s in table %s is %d\n", user_id, TABLE_USER_FILE, res);
+    return 0;
+
+    res = db_search_right(db, TABLE_USER_FILE, "1");
     printf("level for user_file=1 is %d\n", res);
 
-    db_insert_right(db, "user_file", "43", 43);
-    res = db_search_right(db, "user_file", "43");
+    db_insert_right(db, TABLE_USER_FILE, "43", 43);
+    res = db_search_right(db, TABLE_USER_FILE, "43");
     printf("level for user_file=43 is %d\n", res);
-    db_delete_right(db, "user_file", "43");
+    db_delete_right(db, TABLE_USER_FILE, "43");
 
-    db_insert_right(db, "user_file", "123", 123);
-    res = db_search_right(db, "user_file", "123");
+    db_insert_right(db, TABLE_USER_FILE, "123", 123);
+    res = db_search_right(db, TABLE_USER_FILE, "123");
     printf("level for user_file=123 is %d\n", res);
-    db_update_right(db, "user_file", "123", 1000);
+    db_update_right(db, TABLE_USER_FILE, "123", 1000);
 
     
     db_create_table(db, "test");
@@ -36,10 +44,10 @@ int main(){
 
     
 
-    db_set_right(db, "user_file", "123456", 16);
-    db_show_table(db, "user_file");
-    db_set_right(db, "user_file", "123456", 456456);
-    db_show_table(db, "user_file");
+    db_set_right(db, TABLE_USER_FILE, "123456", 16);
+    db_show_table(db, TABLE_USER_FILE);
+    db_set_right(db, TABLE_USER_FILE, "123456", 456456);
+    db_show_table(db, TABLE_USER_FILE);
 
     db_show_table(db, TABLE_FILE);
     db_show_table(db, TABLE_USER_FILE);
@@ -51,7 +59,7 @@ int main(){
 
     // char* tables[] = {
     //     "file",
-    //     "user_file",
+    //     TABLE_USER_FILE,
     //     "process",
     //     "user_process",
     //     "test"
