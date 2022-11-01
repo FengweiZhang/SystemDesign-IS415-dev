@@ -1,8 +1,33 @@
+#include "../common/prm_error.h"
 #include "prm_hook.h"
-#include "prm_netlink.h"
+// #include "prm_netlink.h"
+
+#include <linux/module.h>
+
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("FengweiZhang");
+MODULE_DESCRIPTION("Process rights manager");
+MODULE_VERSION("0.0");
+
+char *module_name = "prm_module";
+module_param(module_name, charp, S_IRUGO);
+MODULE_PARM_DESC(module_name, "Module name");
 
 
-int main()
+static int prm_init(void)
 {
+    prm_hook_init();
+
+    printk("%s: Kernel module installed!\n", module_name);
     return 0;
 }
+
+static void prm_exit(void)
+{
+    prm_hook_exit();
+
+    printk("%s: Kernel module removed!\n", module_name);
+}
+
+module_init(prm_init);
+module_exit(prm_exit);
