@@ -28,6 +28,7 @@
 // 服务器使用的socket路径
 #define SOCK_PATH "/tmp/server.socket"
 
+sqlite3 *db;
 int req_len, rsp_len, rc, server_sock, client_sock;
 
 /**
@@ -56,6 +57,7 @@ struct req
 struct rsp
 {
     unsigned char stat;
+    unsigned char level;
 } rspbuf;
 
 /**
@@ -64,6 +66,96 @@ struct rsp
 void success()
 {
     rspbuf.stat = 1;
+    send(client_sock, &rspbuf, rsp_len, 0);
+}
+
+void setUserLevel(unsigned long uid, unsigned char level)
+{
+    int ret = db_set_right(db, "user_file", uid, level);
+    if (ret == 0)
+    {
+        rspbuf.stat = OP_SUCCESS;
+    }
+    else
+    {
+        rspbuf.stat = OP_FAIL;
+    }
+
+    send(client_sock, &rspbuf, rsp_len, 0);
+}
+
+void getUserLevel(unsigned long uid)
+{
+    int ret = db_search_right(db, "user_file", uid);
+    if (ret == 0)
+    {
+        rspbuf.stat = OP_SUCCESS;
+    }
+    else
+    {
+        rspbuf.stat = USER_SET_LEVEL_FAIL;
+    }
+
+    send(client_sock, &rspbuf, rsp_len, 0);
+}
+
+void deleteUserLevel(unsigned long uid)
+{
+    int ret = db_delete_right(db, "user_file", uid);
+    if (ret == 0)
+    {
+        rspbuf.stat = OP_SUCCESS;
+    }
+    else
+    {
+        rspbuf.stat = OP_FAIL;
+    }
+
+    send(client_sock, &rspbuf, rsp_len, 0);
+}
+
+void setFileLevel(unsigned long inode, unsigned char level)
+{
+    int ret = db_set_right(db, "file", inode, level);
+    if (ret == 0)
+    {
+        rspbuf.stat = OP_SUCCESS;
+    }
+    else
+    {
+        rspbuf.stat = OP_FAIL;
+    }
+
+    send(client_sock, &rspbuf, rsp_len, 0);
+}
+
+void getFileLevel(unsigned long inode)
+{
+    int ret = db_search_right(db, "user_file", inode);
+    if (ret == 0)
+    {
+        rspbuf.stat = OP_SUCCESS;
+    }
+    else
+    {
+        rspbuf.stat = OP_FAIL;
+    }
+
+    send(client_sock, &rspbuf, rsp_len, 0);
+}
+
+void deleteFileLevel(unsigned long inode)
+{
+    int ret = db_delete_right(db, "file", inode);
+    if (ret == 0)
+    {
+        rspbuf.stat = OP_SUCCESS;
+    }
+    else
+    {
+        rspbuf.stat = OP_FAIL;
+    }
+
     send(client_sock, &rspbuf, rsp_len, 0);
 }
 
@@ -91,21 +183,14 @@ int main(int argc, char **argv)
     struct ucred cr;
     ucred_len = sizeof(struct ucred);
 
-    // 连接数据库
-    // rc = sqlite3_open("fvault.db", & db);
-    // if (rc) {
-    //     printf("%s\n", "SQLITE OPEN ERROR");
-    //     sqlite3_close(db);
-    //     exit(1);
-    // }
-
-    // 创建数据表，存储文件inode和文件主uid
-    // rc = sqlite3_exec(db, CREATE, NULL, 0, NULL);
-    // if (rc != SQLITE_OK) {
-    //     printf("%s\n", "CREATE TABLE ERROR");
-    //     sqlite3_close(db);
-    //     exit(1);
-    // }
+    //连接数据库
+    rc = sqlite3_open(DATABASE_PATH, &db);
+    if (rc)
+    {
+        printf("%s\n", "SQLITE OPEN ERROR");
+        sqlite3_close(db);
+        exit(1);
+    }
 
     // 父进程使用netlink与内核模块通信
     if (fork())
@@ -233,13 +318,29 @@ int main(int argc, char **argv)
             // 根据请求的类型进行处理
             switch (reqbuf.op)
             {
-            case 1:
-                // 设置文件的级别
-                success();
+            case SET_USER_LEVEL:
+                // 设置用户的级别
+                setUserLevel(reqbuf.uid, reqbuf.level);
                 break;
-            case 2:
-                // 设置用户级别
-                success();
+            case GET_USER_LEVEL:
+                // 得到用户的级别
+                getUserLevel(reqbuf.uid);
+                break;
+            case DELETE_USER_LEVEL:
+                // 删除用户的级别
+                deleteUserLevel(reqbuf.uid);
+                break;
+            case SET_FILE_LEVEL:
+                // 设置文件的级别
+                setFileLevel(reqbuf.ino, reqbuf.level);
+                break;
+            case GET_FILE_LEVEL:
+                // 得到文件的级别
+                getFileLevel(reqbuf.ino);
+                break;
+            case DELETE_FILE_LEVEL:
+                // 删除文件的级别
+                deleteFileLevel(reqbuf.ino);
                 break;
             }
             // 传输结束以后关闭连接
