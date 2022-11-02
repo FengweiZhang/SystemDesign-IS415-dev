@@ -175,11 +175,13 @@ int main ()
 {
     char * buf = "123321";
     char msg[1024];
+    int a = 2;
 
     u2k_socket_init();
-    u2k_send(buf, strlen(buf)+1);
+    u2k_send(&a, sizeof(int));
     ssize_t ret = u2k_recv(msg, 1024);
-    printf("%s\n%ld\n", msg, ret);
+    printf("%p\n%ld\n", *(void **)msg, ret);
+    u2k_send(msg, sizeof(void *));
     u2k_socket_release();
     return 0;
 }

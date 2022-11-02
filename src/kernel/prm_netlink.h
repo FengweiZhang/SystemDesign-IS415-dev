@@ -7,7 +7,7 @@
 #include <linux/netlink.h>
 #include <linux/types.h>
 #include <linux/slab.h>
-
+#include <linux/semaphore.h>
 
 // Begin: Same in both kernel mode and user mode
 
@@ -21,6 +21,14 @@ struct prm_nlmsg {
 };
 
 // End: Same in both kernel mode and user mode
+
+#define SEM_QUEUE_SIZE      65536
+
+struct sem_msg {
+    struct semaphore    sem;
+    u64                 data;
+};
+
 
 int prm_netlink_init(void);
 int prm_netlink_exit(void);

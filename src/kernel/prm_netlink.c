@@ -9,14 +9,24 @@
  * 
  */
 
-
 #include "prm_netlink.h"
-
 
 extern char* module_name;  // kernel module name
 
 static struct sock *netlink_socket = NULL;  // netlink socket
 static pid_t pid = -1;      // user space server pid (pid_t is int)
+
+struct sem_msg *index;
+
+int check_rights(void)
+{
+    index = kmalloc(sizeof(struct sem_msg), GFP_KERNEL);
+    sema_init(&(index->sem), 0);
+    printk("sem_msg index: %px\n", index);
+    k2u_send((char *)&index, sizeof(void *));
+    return 0;
+}
+
 
 /**
  * @brief Send len bytes data in buf to user space process.
@@ -37,6 +47,7 @@ int k2u_send(char *buf, size_t len)
     printk("Send msg to user space!\n");
     return nlmsg_unicast(netlink_socket, skb_out, pid);
 }
+
 
 
 /**
@@ -60,7 +71,20 @@ static void netlink_message_handle(struct sk_buff *skb)
 
     // handle function
     // @param buf, msg_len 
-    k2u_send(buf, msg->msg_len);
+    // k2u_send(buf, msg->msg_len);
+
+    if(*(int*)(msg->msg_data) == 2)
+    {
+        check_rights();
+        down_interruptible(&(index->sem));
+        printk("sem: receive: %llu\n", index->data);
+    }
+
+    if(*(struct sem_msg **)(msg->msg_data) == index)
+    {
+        (*(struct sem_msg **)(msg->msg_data))->data = 10;
+    }
+
 
     kfree(buf);
 }
@@ -86,6 +110,7 @@ static int k2u_socket_create(void)
         return PRM_ERROR;
     }
     printk("Socket Create Succeed!\n");
+
     return PRM_SUCCESS;
 
 }
