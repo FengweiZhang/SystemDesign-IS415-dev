@@ -22,7 +22,9 @@ struct prm_nlmsg {
 
 // End: Same in both kernel mode and user mode
 
-int k2u_send(char *buf, size_t len);
+int prm_netlink_init(void);
+int prm_netlink_exit(void);
 
+int k2u_send(char *buf, size_t len);
 
 #endif

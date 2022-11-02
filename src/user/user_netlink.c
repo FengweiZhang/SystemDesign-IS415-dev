@@ -171,15 +171,15 @@ ssize_t u2k_recv(char *buf, size_t buflen)
     return recv_msg.msg_len;
 }
 
-// int main ()
-// {
-//     char * buf = "123321";
-//     char msg[1024];
+int main ()
+{
+    char * buf = "123321";
+    char msg[1024];
 
-//     u2k_socket_init();
-//     u2k_send(buf, strlen(buf)+1);
-//     ssize_t ret = u2k_recv(msg, 1024);
-//     printf("%s\n%ld\n", msg, ret);
-//     u2k_socket_release();
-//     return 0;
-// }
+    u2k_socket_init();
+    u2k_send(buf, strlen(buf)+1);
+    ssize_t ret = u2k_recv(msg, 1024);
+    printf("%s\n%ld\n", msg, ret);
+    u2k_socket_release();
+    return 0;
+}

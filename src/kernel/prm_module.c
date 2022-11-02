@@ -1,6 +1,6 @@
 #include "../common/prm_error.h"
 #include "prm_hook.h"
-// #include "prm_netlink.h"
+#include "prm_netlink.h"
 
 #include <linux/module.h>
 
@@ -16,6 +16,7 @@ MODULE_PARM_DESC(module_name, "Module name");
 
 static int prm_init(void)
 {
+    prm_netlink_init();
     prm_hook_init();
 
     printk("%s: Kernel module installed!\n", module_name);
@@ -25,6 +26,7 @@ static int prm_init(void)
 static void prm_exit(void)
 {
     prm_hook_exit();
+    prm_netlink_exit();
 
     printk("%s: Kernel module removed!\n", module_name);
 }

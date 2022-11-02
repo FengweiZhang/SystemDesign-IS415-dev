@@ -19,7 +19,7 @@ static struct sock *netlink_socket = NULL;  // netlink socket
 static pid_t pid = -1;      // user space server pid (pid_t is int)
 
 /**
- * @brief Send len bytes in buf to user space process.
+ * @brief Send len bytes data in buf to user space process.
  * 
  * @param buf   
  * @param len 
@@ -104,5 +104,17 @@ static int k2u_socket_close(void)
     }   
     printk("Socket Release Succeed!\n");
     return PRM_SUCCESS;
+}
+
+
+int prm_netlink_init(void)
+{
+    return k2u_socket_create();
+}
+
+
+int prm_netlink_exit(void)
+{
+    return k2u_socket_close();
 }
 
