@@ -28,9 +28,9 @@ struct prm_nlmsg {
 // 用户态与核心态之间发送的消息的结构
 struct prm_msg {
     int32_t     index;      // 在模块中使用atomic_t的值，为了减少处理，取值范围是signed int
-    uint32_t     type;   
+    uint32_t    type;   
     int32_t     result_type;
-    uint64_t     sem_msg_ptr;
+    uint64_t    sem_msg_ptr;
 };
 
 // prm_msg的type的取值
@@ -38,6 +38,7 @@ struct prm_msg {
 #define PRM_MSG_TYPE_CONNECT_CONFIRM    (uint32_t)0x00000002
 #define PRM_MSG_TYPE_CHECK              (uint32_t)0x00000003     // 核心态向用户态发起权限查询请求
 #define PRM_MSG_TYPE_RESULT             (uint32_t)0x00000004     // 权限查询结果: 
+#define PRM_MSG_TYPE_DISCONNECT         (uint32_t)0x00000005     // 用户态取消连接
 
 // prm_msg result_type 取值
 #define CHECK_RESULT_NOTPASS            (int32_t)(-1)       // 无权访问

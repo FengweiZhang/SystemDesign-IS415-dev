@@ -89,6 +89,11 @@ int u2k_socket_init()
  */
 int u2k_socket_release()
 {
+    struct prm_msg mmm;
+    memset((void *)&mmm, 0, sizeof(mmm));
+    mmm.type = PRM_MSG_TYPE_DISCONNECT;
+    u2k_send((char *)&mmm, sizeof(struct prm_msg));
+
     close(netlink_socket);
     free(msg);
     free(user_addr);
@@ -98,6 +103,19 @@ int u2k_socket_release()
     msg = NULL;
     user_addr = NULL;
     kernel_addr = NULL;
+
+    return PRM_SUCCESS;
+}
+
+/**
+ * @brief 重新与内核态建立连接
+ * 
+ * @return int 
+ */
+int u2k_socket_reconnect()
+{
+    u2k_socket_release();
+    u2k_socket_init();
 
     return PRM_SUCCESS;
 }

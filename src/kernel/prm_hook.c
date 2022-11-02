@@ -70,13 +70,14 @@ int prm_hook_init(void)
     // get syscall table position
     register_kprobe(&kp);
     sys_call_ptr = get_sys_call_table();
-    printk("%s: sys call table found at 0x%px \n", module_name, sys_call_ptr);
+    printk("%s %s: System call table found at 0x%px.\n", module_name, name, sys_call_ptr);
 
     // hook system call
     write_protection_off(); 
     real_openat = (void *)sys_call_ptr[__NR_openat];
     sys_call_ptr[__NR_openat] = (sys_call_ptr_t)my_sys_openat;
     write_protection_on();
+    printk("%s %s: System calls hook set.\n", module_name, name);
 
     return PRM_SUCCESS;
 }
@@ -92,6 +93,7 @@ int prm_hook_exit(void)
     write_protection_off();
     sys_call_ptr[__NR_openat] = (sys_call_ptr_t)real_openat;
     write_protection_on();
+    printk("%s %s: System calls hook unset.\n", module_name, name);
 
     unregister_kprobe(&kp);
 

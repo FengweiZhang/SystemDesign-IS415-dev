@@ -35,6 +35,7 @@ struct prm_msg {
 #define PRM_MSG_TYPE_CONNECT_CONFIRM    (u32)0x00000002     // 核心态向用户态发送注册成功消息
 #define PRM_MSG_TYPE_CHECK              (u32)0x00000003     // 核心态向用户态发起权限查询请求
 #define PRM_MSG_TYPE_RESULT             (u32)0x00000004     // 权限查询结果: 
+#define PRM_MSG_TYPE_DISCONNECT         (u32)0x00000005     // 用户态取消连接
 
 // prm_msg result_type 取值
 #define CHECK_RESULT_NOTPASS            (s32)(1)        // 无权访问
@@ -62,5 +63,7 @@ int prm_netlink_exit(void);
 int k2u_send(char *buf, size_t len);
 
 int check_rights(void);
+
+
 
 #endif

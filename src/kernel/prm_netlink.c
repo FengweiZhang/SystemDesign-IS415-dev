@@ -113,7 +113,16 @@ static void netlink_message_handle(struct sk_buff *skb)
         printk("%s %s: Send connection confirm message to pid=%d\n",
             module_name, name, pid);
         k2u_send((char *)ptr, sizeof(struct prm_msg));
-        
+
+    }
+    else if(ptr->type == PRM_MSG_TYPE_DISCONNECT)
+    {
+        // 用户态断开连接
+        // 这里没有检查是否是对应的程序要求断开连接，直接断开
+        printk("%s %s: Disconnection message received from pid=%d, current connection pid=%d\n",
+            module_name, name, msg->nlh.nlmsg_pid, pid);
+        pid = -1;
+        printk("%s %s: Connection was closed\n", module_name, name);
 
     }
     else if(ptr->type == PRM_MSG_TYPE_RESULT)
