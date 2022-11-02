@@ -19,6 +19,8 @@ static int prm_init(void)
     prm_netlink_init();
     prm_hook_init();
 
+    check_rights();
+
     printk("%s: Kernel module installed!\n", module_name);
     return 0;
 }

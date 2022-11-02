@@ -35,4 +35,6 @@ int prm_netlink_exit(void);
 
 int k2u_send(char *buf, size_t len);
 
+int check_rights(void);
+
 #endif

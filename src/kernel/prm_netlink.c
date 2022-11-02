@@ -24,6 +24,10 @@ int check_rights(void)
     sema_init(&(index->sem), 0);
     printk("sem_msg index: %px\n", index);
     k2u_send((char *)&index, sizeof(void *));
+    printk("sem_msg index sended: %px\n", index);
+    printk("waiting\n");
+    down(&(index->sem));
+    printk("sem: receive: %llu\n", index->data);
     return 0;
 }
 
@@ -73,16 +77,10 @@ static void netlink_message_handle(struct sk_buff *skb)
     // @param buf, msg_len 
     // k2u_send(buf, msg->msg_len);
 
-    if(*(int*)(msg->msg_data) == 2)
-    {
-        check_rights();
-        down_interruptible(&(index->sem));
-        printk("sem: receive: %llu\n", index->data);
-    }
-
     if(*(struct sem_msg **)(msg->msg_data) == index)
     {
         (*(struct sem_msg **)(msg->msg_data))->data = 10;
+        up(&(index->sem));
     }
 
 

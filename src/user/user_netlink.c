@@ -127,6 +127,7 @@ int u2k_send(char *buf, size_t len)
     msg->msg_len = len;
 
     ssize_t send_len = sendto(netlink_socket, msg, msg->nlh.nlmsg_len, 0, (struct sockaddr *)kernel_addr, sizeof(struct sockaddr_nl));
+    printf("=========\n");
     if(send_len == -1)
     {
         perror("u2k send failed!\n");
@@ -178,7 +179,9 @@ int main ()
     int a = 2;
 
     u2k_socket_init();
+    printf("init succees\n");
     u2k_send(&a, sizeof(int));
+    printf("start msg semd\n");
     ssize_t ret = u2k_recv(msg, 1024);
     printf("%p\n%ld\n", *(void **)msg, ret);
     u2k_send(msg, sizeof(void *));
