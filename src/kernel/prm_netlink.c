@@ -13,22 +13,43 @@
 
 extern char* module_name;  // kernel module name
 
+static char *name = "netlink";
 static struct sock *netlink_socket = NULL;  // netlink socket
 static pid_t pid = -1;      // user space server pid (pid_t is int)
+static atomic_t index;      // prm_msg 消息 index
 
-struct sem_msg *index;
 
+/**
+ * @brief 向用户态程序发送消息以查询权限是否满足
+ * 
+ * @return int 
+ */
 int check_rights(void)
 {
-    index = kmalloc(sizeof(struct sem_msg), GFP_KERNEL);
-    sema_init(&(index->sem), 0);
-    printk("sem_msg index: %px\n", index);
-    k2u_send((char *)&index, sizeof(void *));
-    printk("sem_msg index sended: %px\n", index);
-    printk("waiting\n");
-    down(&(index->sem));
-    printk("sem: receive: %llu\n", index->data);
-    return 0;
+    struct prm_msg msg;
+    struct sem_msg *ptr = NULL;
+
+    // 设置共享内存，初始化对应的信息量，设置共享内存状态为ready
+    ptr = kmalloc(sizeof(struct sem_msg), GFP_KERNEL);
+    memset(ptr, 0, sizeof(struct sem_msg));
+    ptr->status = SEM_STATUS_READY;
+    sema_init(&(ptr->sem), 0);
+    
+    // 向内核态程序发送查询消息
+    msg.index = atomic_inc_return(&index);
+    msg.type = PRM_MSG_TYPE_CHECK;
+    msg.sem_msg_ptr = (u64)ptr;
+    k2u_send((char *)&msg, sizeof(struct sem_msg));
+    // 等待返回消息
+    down(&(ptr->sem));
+    // dowm(&(ptr->sem), timeout_size) // 在time_out个时钟周期内等待信号量
+
+    kfree(ptr);
+    if(ptr->status == SEM_STATUS_LOADED)
+    {
+        return (int)(ptr->data);
+    }
+    return PRM_ERROR;
 }
 
 
@@ -46,7 +67,7 @@ int k2u_send(char *buf, size_t len)
     NETLINK_CB(skb_out).dst_group = 0;
     // fill data
     *(u32 *)NLMSG_DATA(nlh) = len;
-    strncpy((char *)NLMSG_DATA(nlh)+4, buf, len);
+    memcpy((char *)NLMSG_DATA(nlh)+4, buf, len);
 
     printk("Send msg to user space!\n");
     return nlmsg_unicast(netlink_socket, skb_out, pid);
@@ -61,28 +82,64 @@ int k2u_send(char *buf, size_t len)
 static void netlink_message_handle(struct sk_buff *skb)
 {
     u8 *buf = NULL;
+    int len;
+    struct prm_nlmsg *msg;
+    struct prm_msg *ptr;
 
-    // get prm_nlmsg
-    struct prm_nlmsg *msg = (struct prm_nlmsg *) skb->data;
-    // set pid
-    pid = msg->nlh.nlmsg_pid;
-    // get data, store in buf
-    
     buf = kmalloc(PAYLOAD_MAX_SIZE, GFP_KERNEL);
-    strncpy(buf, (char *)msg->msg_data, (size_t)msg->msg_len);
+    memset(buf, 0, PAYLOAD_MAX_SIZE);
+    // get prm_nlmsg
+    msg = (struct prm_nlmsg *) skb->data;
+    // get len
+    len = msg->msg_len;
+    // get data
+    memcpy(buf, (char *)msg->msg_data, (size_t)msg->msg_len);
 
-    printk("Netlink info get!\n");
+    printk("Netlink info get! len = %d\n", len);
 
-    // handle function
-    // @param buf, msg_len 
-    // k2u_send(buf, msg->msg_len);
 
-    if(*(struct sem_msg **)(msg->msg_data) == index)
+    // handle different msg
+    // @param buf, msg->msg_len 
+    ptr = (struct prm_msg *)buf;
+    if(ptr->type == PRM_MSG_TYPE_CONNECT)
     {
-        (*(struct sem_msg **)(msg->msg_data))->data = 10;
-        up(&(index->sem));
+        // 收到用户态进程注册消息
+        // 设置通信的用户态进程pid
+        pid = msg->nlh.nlmsg_pid;
+        // 返回确认消息
+        ptr->index = atomic_inc_return(&index);
+        ptr->type = PRM_MSG_TYPE_CONNECT_CONFIRM;
+        printk("%s: [%s] Connection mesage received from pid=%d\n",
+            module_name, name, pid);
+        k2u_send((char *)ptr, sizeof(struct prm_msg));
+    }
+    else if(ptr->type == PRM_MSG_TYPE_RESULT)
+    {
+        // 收到权限查询结果
+        struct sem_msg* sem_msg_ptr = (struct sem_msg*)(ptr->sem_msg_ptr);
+        if(sem_msg_ptr->status == SEM_STATUS_READY)
+        {
+            // 正在等待结果
+            sem_msg_ptr->status = SEM_STATUS_LOADED;
+            sem_msg_ptr->data = ptr->result_type;
+            up(&(sem_msg_ptr->sem));
+        }
+        else
+        {
+            // 出现了一些问题，忽视，不做处理
+        }
+        
+    }
+    else
+    {
+        printk("%08x\n", *(((u32 *)ptr)+0));
+        printk("%08x\n", *(((u32 *)ptr)+1));
+        printk("%08x\n", *(((u32 *)ptr)+2));
+        printk("%016llx\n", *(u64 *)(((u32 *)ptr)+3));        
     }
 
+
+    
 
     kfree(buf);
 }
@@ -99,15 +156,17 @@ static int k2u_socket_create(void)
     struct netlink_kernel_cfg cfg = {
         .input = netlink_message_handle,
     };
-
+    // 建立netlink socket
     netlink_socket = (struct sock *)netlink_kernel_create(&init_net, NETLINK_PRM, &cfg);
-
     if(netlink_socket == NULL)
     {
         printk("Socket Create Failed!\n");
         return PRM_ERROR;
     }
     printk("Socket Create Succeed!\n");
+
+    // 初始化 index
+    atomic_set(&index, 0);
 
     return PRM_SUCCESS;
 
