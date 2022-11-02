@@ -177,14 +177,17 @@ int main ()
     char * buf = "123321";
     char msg[1024];
     int a = 2;
+    void *ttt;
+
+    ttt = (0xffff94924d5079c0);
 
     u2k_socket_init();
     printf("init succees\n");
-    u2k_send(&a, sizeof(int));
-    printf("start msg semd\n");
-    ssize_t ret = u2k_recv(msg, 1024);
-    printf("%p\n%ld\n", *(void **)msg, ret);
-    u2k_send(msg, sizeof(void *));
+    // u2k_send(&a, sizeof(int));
+    // printf("start msg semd\n");
+    // ssize_t ret = u2k_recv(msg, 1024);
+    // printf("%p\n%ld\n", *(void **)msg, ret);
+    u2k_send(&ttt, sizeof(void *));
     u2k_socket_release();
     return 0;
 }
