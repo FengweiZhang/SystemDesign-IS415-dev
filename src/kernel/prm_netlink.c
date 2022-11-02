@@ -13,11 +13,10 @@
 
 extern char* module_name;  // kernel module name
 
-static char *name = "netlink";
+static char *name = "Netlink";
 static struct sock *netlink_socket = NULL;  // netlink socket
 static pid_t pid = -1;      // user space server pid (pid_t is int)
 static atomic_t index;      // prm_msg 消息 index
-
 
 /**
  * @brief 向用户态程序发送消息以查询权限是否满足
@@ -42,7 +41,7 @@ int check_rights(void)
     k2u_send((char *)&msg, sizeof(struct sem_msg));
     // 等待返回消息
     down(&(ptr->sem));
-    // dowm(&(ptr->sem), timeout_size) // 在time_out个时钟周期内等待信号量
+    // dowm(&(ptr->sem), SEM_WAIT_CYCLE) // 在SEM_WAIT_CYCLE个时钟周期内等待信号量
 
     kfree(ptr);
     if(ptr->status == SEM_STATUS_LOADED)
@@ -69,7 +68,7 @@ int k2u_send(char *buf, size_t len)
     *(u32 *)NLMSG_DATA(nlh) = len;
     memcpy((char *)NLMSG_DATA(nlh)+4, buf, len);
 
-    printk("Send msg to user space!\n");
+    printk("%s %s: Send netlink msg to user space!\n", module_name, name);
     return nlmsg_unicast(netlink_socket, skb_out, pid);
 }
 
@@ -95,7 +94,7 @@ static void netlink_message_handle(struct sk_buff *skb)
     // get data
     memcpy(buf, (char *)msg->msg_data, (size_t)msg->msg_len);
 
-    printk("Netlink info get! len = %d\n", len);
+    printk("%s %s: Netlink msg recieved!\n", module_name, name);
 
 
     // handle different msg
@@ -109,9 +108,13 @@ static void netlink_message_handle(struct sk_buff *skb)
         // 返回确认消息
         ptr->index = atomic_inc_return(&index);
         ptr->type = PRM_MSG_TYPE_CONNECT_CONFIRM;
-        printk("%s: [%s] Connection mesage received from pid=%d\n",
+        printk("%s %s: Connection message received from pid=%d\n",
+            module_name, name, pid);
+        printk("%s %s: Send connection confirm message to pid=%d\n",
             module_name, name, pid);
         k2u_send((char *)ptr, sizeof(struct prm_msg));
+        
+
     }
     else if(ptr->type == PRM_MSG_TYPE_RESULT)
     {
@@ -132,6 +135,7 @@ static void netlink_message_handle(struct sk_buff *skb)
     }
     else
     {
+        // 出现了未知的消息类型
         printk("%08x\n", *(((u32 *)ptr)+0));
         printk("%08x\n", *(((u32 *)ptr)+1));
         printk("%08x\n", *(((u32 *)ptr)+2));
@@ -160,10 +164,10 @@ static int k2u_socket_create(void)
     netlink_socket = (struct sock *)netlink_kernel_create(&init_net, NETLINK_PRM, &cfg);
     if(netlink_socket == NULL)
     {
-        printk("Socket Create Failed!\n");
+        printk("%s %s: [Error]Socket Create Failed!\n", module_name, name);
         return PRM_ERROR;
     }
-    printk("Socket Create Succeed!\n");
+    printk("%s %s: Socket Create Succeed!\n", module_name, name);
 
     // 初始化 index
     atomic_set(&index, 0);
@@ -184,7 +188,7 @@ static int k2u_socket_close(void)
         netlink_kernel_release(netlink_socket);
         netlink_socket = NULL;
     }   
-    printk("Socket Release Succeed!\n");
+    printk("%s %s: Socket Release Succeed!\n", module_name, name);
     return PRM_SUCCESS;
 }
 

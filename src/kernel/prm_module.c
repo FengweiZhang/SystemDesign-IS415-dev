@@ -9,7 +9,7 @@ MODULE_AUTHOR("FengweiZhang");
 MODULE_DESCRIPTION("Process rights manager");
 MODULE_VERSION("0.0");
 
-char *module_name = "prm";
+char *module_name = "PRM";
 module_param(module_name, charp, S_IRUGO);
 MODULE_PARM_DESC(module_name, "Module name");
 

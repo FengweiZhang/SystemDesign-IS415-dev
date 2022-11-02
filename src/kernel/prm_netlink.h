@@ -37,10 +37,12 @@ struct prm_msg {
 #define PRM_MSG_TYPE_RESULT             (u32)0x00000004     // 权限查询结果: 
 
 // prm_msg result_type 取值
-#define CHECK_RESULT_NOTPASS            (s32)(-1)       // 无权访问
-#define CHECK_RESULT_PASS               (s32)(0)        // 有权访问
+#define CHECK_RESULT_NOTPASS            (s32)(1)        // 无权访问
+#define CHECK_RESULT_PASS               (s32)(2)        // 有权访问
 
 // End: Same in both kernel mode and user mode
+
+#define SEM_WAIT_CYCLE      1000
 
 // 用户内核态进程间数据传递的结构体
 struct sem_msg {
