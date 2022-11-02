@@ -9,7 +9,7 @@ MODULE_AUTHOR("FengweiZhang");
 MODULE_DESCRIPTION("Process rights manager");
 MODULE_VERSION("0.0");
 
-char *module_name = "prm_module";
+char *module_name = "PRM";
 module_param(module_name, charp, S_IRUGO);
 MODULE_PARM_DESC(module_name, "Module name");
 
@@ -18,6 +18,8 @@ static int prm_init(void)
 {
     prm_netlink_init();
     prm_hook_init();
+
+    // check_rights();
 
     printk("%s: Kernel module installed!\n", module_name);
     return 0;

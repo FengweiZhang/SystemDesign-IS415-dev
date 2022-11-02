@@ -13,8 +13,10 @@
 typedef void (* sys_call_ptr_t)(void);
 
 
-extern char* module_name;  // kernel module name
+extern char* module_name;               // kernel module name
 extern unsigned long __force_order;     // used to configure register cr0
+
+static char * name = "Hook";
 
 sys_call_ptr_t *sys_call_ptr = NULL;    // system call table pointer 
 
@@ -34,7 +36,7 @@ static void write_protection_off(void){ write_cr0_new(read_cr0() & (~0x10000)); 
 static void write_protection_on(void){ write_cr0_new(read_cr0() | 0x10000); }
 
 /**
- * @brief Get the sys call table position
+ * @brief Get the sys call table pointer
  * 
  * @return sys_call_ptr_t* 
  */
@@ -59,7 +61,7 @@ asmlinkage long my_sys_openat(struct pt_regs * reg)
 
 
 /**
- * @brief set hook
+ * @brief 进行 hook
  * 
  * @return int 
  */
@@ -80,7 +82,7 @@ int prm_hook_init(void)
 }
 
 /**
- * @brief unset hook
+ * @brief 取消 hook
  * 
  * @return int 
  */

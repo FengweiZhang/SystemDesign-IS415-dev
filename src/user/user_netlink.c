@@ -123,10 +123,11 @@ int u2k_send(char *buf, size_t len)
     }
 
     memset(&(msg->msg_len), 0, PAYLOAD_MAX_SIZE+4);
-    strncpy(msg->msg_data, buf, len);
+    memcpy(msg->msg_data, buf, len);
     msg->msg_len = len;
 
     ssize_t send_len = sendto(netlink_socket, msg, msg->nlh.nlmsg_len, 0, (struct sockaddr *)kernel_addr, sizeof(struct sockaddr_nl));
+    // printf("=========\n");
     if(send_len == -1)
     {
         perror("u2k send failed!\n");
@@ -167,7 +168,7 @@ ssize_t u2k_recv(char *buf, size_t buflen)
         return PRM_ERROR;
     }
 
-    strncpy(buf, recv_msg.msg_data, recv_msg.msg_len);
+    memcpy(buf, recv_msg.msg_data, recv_msg.msg_len);
     return recv_msg.msg_len;
 }
 
@@ -176,10 +177,26 @@ int main ()
     char * buf = "123321";
     char msg[1024];
 
+    struct prm_msg mmm;
+    // memset(&mmm, 0, sizeof(mmm));
+    mmm.index = 0;
+    mmm.type = PRM_MSG_TYPE_CONNECT;
+
+    for(int i=0;i<5;i++)
+    {
+        printf("%08x\n", *((uint32_t *)(&mmm)+i));
+    }
+
     u2k_socket_init();
-    u2k_send(buf, strlen(buf)+1);
+    printf("init succees\n");
+    int rest = u2k_send(&mmm, sizeof(struct prm_msg));
+    printf("start msg send %d, sizeof %d\n", rest,sizeof(struct prm_msg));
+    
+    struct prm_msg *rrr = NULL;
     ssize_t ret = u2k_recv(msg, 1024);
-    printf("%s\n%ld\n", msg, ret);
+    rrr = msg;
+    printf("Receive: %u", rrr->type);
+
     u2k_socket_release();
     return 0;
 }
