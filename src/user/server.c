@@ -86,14 +86,15 @@ void setUserLevel(unsigned long uid, unsigned char level)
 
 void getUserLevel(unsigned long uid)
 {
-    int ret = db_search_right(db, "user_file", uid);
-    if (ret == 0)
+    int level = db_search_right(db, "user_file", uid);
+    if (level == -1)
     {
-        rspbuf.stat = OP_SUCCESS;
+        rspbuf.stat = OP_NOT_FIND;
     }
     else
     {
-        rspbuf.stat = USER_SET_LEVEL_FAIL;
+        rspbuf.stat = OP_SUCCESS;
+        rspbuf.level = level;
     }
 
     send(client_sock, &rspbuf, rsp_len, 0);
@@ -131,14 +132,15 @@ void setFileLevel(unsigned long inode, unsigned char level)
 
 void getFileLevel(unsigned long inode)
 {
-    int ret = db_search_right(db, "user_file", inode);
-    if (ret == 0)
+    int level = db_search_right(db, "user_file", inode);
+    if (level == -1)
     {
-        rspbuf.stat = OP_SUCCESS;
+        rspbuf.stat = OP_NOT_FIND;
     }
     else
     {
-        rspbuf.stat = OP_FAIL;
+        rspbuf.stat = OP_SUCCESS;
+        rspbuf.level = level;
     }
 
     send(client_sock, &rspbuf, rsp_len, 0);
