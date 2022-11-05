@@ -184,8 +184,7 @@ void usage(void)
                    "  -g (get)	get level\n"
                    "  -d (delete)	delete level\n"
                    "  -u (user)	input user name for operation\n"
-                   "  -f (file)	input file path for operation\n"
-                   "  -l (level)	set level\n");
+                   "  -f (file)	input file path for operation\n");
 }
 
 /**
@@ -208,7 +207,7 @@ int main(int argc, char **argv)
     struct stat file_stat;
     // 解析参数，如果一个连字符后面多个选项，只识别最后一个 f设置文件，u设置用户,l为level,s:set,d:delete,g:get
     // 例如：fvault -cl等价于fvault -l，循环解析
-    while ((ch = getopt(argc, argv, "sgdf:u:l:")) != -1)
+    while ((ch = getopt(argc, argv, "s:gdf:u:")) != -1)
     {
         switch (ch)
         {
@@ -219,6 +218,7 @@ int main(int argc, char **argv)
                 usage();
                 return -1;
             }
+            level = optarg[0] - '0';
             mode2 = 0;
             break;
         case 'g':
@@ -248,10 +248,6 @@ int main(int argc, char **argv)
             mode1 += 1;
             memset(username, 0, 255);
             memcpy(username, optarg, strlen(optarg));
-            break;
-        case 'l':
-            level = optarg[0]-'0';
-            // level只能是特定的几个值，否则调用usage
             break;
         default:
             printf("other");
