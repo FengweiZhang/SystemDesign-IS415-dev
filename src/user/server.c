@@ -69,9 +69,9 @@ void success()
     send(client_sock, &rspbuf, rsp_len, 0);
 }
 
-void setUserLevel(char* uid, int level)
+void setUserLevel(char *uid, int level)
 {
-    printf("set user %s,level: %d \n", uid,level);
+    printf("set user %s,level: %d \n", uid, level);
     int ret = db_set_right(db, "user_file", uid, level);
     if (ret == 0)
     {
@@ -87,7 +87,7 @@ void setUserLevel(char* uid, int level)
     send(client_sock, &rspbuf, rsp_len, 0);
 }
 
-void getUserLevel(char* uid)
+void getUserLevel(char *uid)
 {
     printf("search user %s level\n", uid);
     int level = db_search_right(db, "user_file", uid);
@@ -104,7 +104,7 @@ void getUserLevel(char* uid)
     send(client_sock, &rspbuf, rsp_len, 0);
 }
 
-void deleteUserLevel(char* uid)
+void deleteUserLevel(char *uid)
 {
     int ret = db_delete_right(db, "user_file", uid);
     if (ret == 0)
@@ -119,7 +119,7 @@ void deleteUserLevel(char* uid)
     send(client_sock, &rspbuf, rsp_len, 0);
 }
 
-void setFileLevel(char* inode, int level)
+void setFileLevel(char *inode, int level)
 {
     int ret = db_set_right(db, "file", inode, level);
     if (ret == 0)
@@ -134,7 +134,7 @@ void setFileLevel(char* inode, int level)
     send(client_sock, &rspbuf, rsp_len, 0);
 }
 
-void getFileLevel(char* inode)
+void getFileLevel(char *inode)
 {
     int level = db_search_right(db, "user_file", inode);
     if (level == -1)
@@ -150,7 +150,7 @@ void getFileLevel(char* inode)
     send(client_sock, &rspbuf, rsp_len, 0);
 }
 
-void deleteFileLevel(char* inode)
+void deleteFileLevel(char *inode)
 {
     int ret = db_delete_right(db, "file", inode);
     if (ret == 0)
@@ -321,41 +321,41 @@ int main(int argc, char **argv)
                 close(client_sock);
                 continue;
             }
-            printf("receive operation: %d\n",reqbuf.op);
-            char uid_ch[20],ino_ch[20];
+            printf("receive operation: %d\n", reqbuf.op);
+            char uid_ch[20], ino_ch[20];
             // 根据请求的类型进行处理
             switch (reqbuf.op)
             {
-            case 0:
+            case SET_USER_LEVEL:
                 printf("set\n");
-                printf("set user %lu,level: %d \n", reqbuf.uid,reqbuf.level);
+                printf("set user %lu,level: %d \n", reqbuf.uid, reqbuf.level);
                 // 设置用户的级别
-                sprintf(uid_ch,"%lu", reqbuf.uid);
+                sprintf(uid_ch, "%lu", reqbuf.uid);
                 setUserLevel(uid_ch, reqbuf.level);
                 break;
             case GET_USER_LEVEL:
                 // 得到用户的级别
-                sprintf(uid_ch,"%lu", reqbuf.uid);
+                sprintf(uid_ch, "%lu", reqbuf.uid);
                 getUserLevel(uid_ch);
                 break;
             case DELETE_USER_LEVEL:
                 // 删除用户的级别
-                sprintf(uid_ch,"%lu", reqbuf.uid);
+                sprintf(uid_ch, "%lu", reqbuf.uid);
                 deleteUserLevel(uid_ch);
                 break;
             case SET_FILE_LEVEL:
                 // 设置文件的级别
-                sprintf(ino_ch,"%lu", reqbuf.ino);
+                sprintf(ino_ch, "%lu", reqbuf.ino);
                 setFileLevel(ino_ch, reqbuf.level);
                 break;
             case GET_FILE_LEVEL:
                 // 得到文件的级别
-                sprintf(ino_ch,"%lu", reqbuf.ino);
+                sprintf(ino_ch, "%lu", reqbuf.ino);
                 getFileLevel(ino_ch);
                 break;
             case DELETE_FILE_LEVEL:
                 // 删除文件的级别
-                sprintf(ino_ch,"%lu", reqbuf.ino);
+                sprintf(ino_ch, "%lu", reqbuf.ino);
                 deleteFileLevel(ino_ch);
                 break;
             default:
