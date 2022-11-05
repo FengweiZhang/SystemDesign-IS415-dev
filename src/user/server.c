@@ -40,8 +40,8 @@ int req_len, rsp_len, rc, server_sock, client_sock;
  */
 struct req
 {
-    unsigned char op;
-    unsigned char level;
+    int op;
+    int level;
     unsigned long uid; // uid
     unsigned long ino; //文件号
 } reqbuf;
@@ -56,8 +56,8 @@ struct req
  */
 struct rsp
 {
-    unsigned char stat;
-    unsigned char level;
+    int stat;
+    int level;
 } rspbuf;
 
 /**
@@ -69,23 +69,27 @@ void success()
     send(client_sock, &rspbuf, rsp_len, 0);
 }
 
-void setUserLevel(unsigned long uid, unsigned char level)
+void setUserLevel(char* uid, int level)
 {
+    printf("set user %s,level: %d \n", uid,level);
     int ret = db_set_right(db, "user_file", uid, level);
     if (ret == 0)
     {
+        printf("success\n");
         rspbuf.stat = OP_SUCCESS;
     }
     else
     {
+        printf("fail\n");
         rspbuf.stat = OP_FAIL;
     }
 
     send(client_sock, &rspbuf, rsp_len, 0);
 }
 
-void getUserLevel(unsigned long uid)
+void getUserLevel(char* uid)
 {
+    printf("search user %s level\n", uid);
     int level = db_search_right(db, "user_file", uid);
     if (level == -1)
     {
@@ -100,7 +104,7 @@ void getUserLevel(unsigned long uid)
     send(client_sock, &rspbuf, rsp_len, 0);
 }
 
-void deleteUserLevel(unsigned long uid)
+void deleteUserLevel(char* uid)
 {
     int ret = db_delete_right(db, "user_file", uid);
     if (ret == 0)
@@ -115,7 +119,7 @@ void deleteUserLevel(unsigned long uid)
     send(client_sock, &rspbuf, rsp_len, 0);
 }
 
-void setFileLevel(unsigned long inode, unsigned char level)
+void setFileLevel(char* inode, int level)
 {
     int ret = db_set_right(db, "file", inode, level);
     if (ret == 0)
@@ -130,7 +134,7 @@ void setFileLevel(unsigned long inode, unsigned char level)
     send(client_sock, &rspbuf, rsp_len, 0);
 }
 
-void getFileLevel(unsigned long inode)
+void getFileLevel(char* inode)
 {
     int level = db_search_right(db, "user_file", inode);
     if (level == -1)
@@ -146,7 +150,7 @@ void getFileLevel(unsigned long inode)
     send(client_sock, &rspbuf, rsp_len, 0);
 }
 
-void deleteFileLevel(unsigned long inode)
+void deleteFileLevel(char* inode)
 {
     int ret = db_delete_right(db, "file", inode);
     if (ret == 0)
@@ -317,33 +321,45 @@ int main(int argc, char **argv)
                 close(client_sock);
                 continue;
             }
+            printf("receive operation: %d\n",reqbuf.op);
+            char uid_ch[20],ino_ch[20];
             // 根据请求的类型进行处理
             switch (reqbuf.op)
             {
-            case SET_USER_LEVEL:
+            case 0:
+                printf("set\n");
+                printf("set user %lu,level: %d \n", reqbuf.uid,reqbuf.level);
                 // 设置用户的级别
-                setUserLevel(reqbuf.uid, reqbuf.level);
+                sprintf(uid_ch,"%lu", reqbuf.uid);
+                setUserLevel(uid_ch, reqbuf.level);
                 break;
             case GET_USER_LEVEL:
                 // 得到用户的级别
-                getUserLevel(reqbuf.uid);
+                sprintf(uid_ch,"%lu", reqbuf.uid);
+                getUserLevel(uid_ch);
                 break;
             case DELETE_USER_LEVEL:
                 // 删除用户的级别
-                deleteUserLevel(reqbuf.uid);
+                sprintf(uid_ch,"%lu", reqbuf.uid);
+                deleteUserLevel(uid_ch);
                 break;
             case SET_FILE_LEVEL:
                 // 设置文件的级别
-                setFileLevel(reqbuf.ino, reqbuf.level);
+                sprintf(ino_ch,"%lu", reqbuf.ino);
+                setFileLevel(ino_ch, reqbuf.level);
                 break;
             case GET_FILE_LEVEL:
                 // 得到文件的级别
-                getFileLevel(reqbuf.ino);
+                sprintf(ino_ch,"%lu", reqbuf.ino);
+                getFileLevel(ino_ch);
                 break;
             case DELETE_FILE_LEVEL:
                 // 删除文件的级别
-                deleteFileLevel(reqbuf.ino);
+                sprintf(ino_ch,"%lu", reqbuf.ino);
+                deleteFileLevel(ino_ch);
                 break;
+            default:
+                printf("some error");
             }
             // 传输结束以后关闭连接
             close(client_sock);

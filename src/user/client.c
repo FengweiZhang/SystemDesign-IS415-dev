@@ -41,8 +41,8 @@
  */
 struct req
 {
-    unsigned char op;
-    unsigned char level;
+    int op;
+    int level;
     unsigned long uid; // uid
     unsigned long ino; //文件号,或设备、网络代表号
 };
@@ -57,8 +57,8 @@ struct req
  */
 struct rsp
 {
-    unsigned char stat;
-    unsigned char level;
+    int stat;
+    int level;
 };
 
 // 文件路径
@@ -118,7 +118,7 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid, unsigned cha
         exit(1);
     }
 
-    printf("send message");
+    printf("send message\n");
     // 发送请求
     rc = send(client_sock, &reqbuf, sizeof(struct req), 0);
     if (rc == -1)
@@ -130,7 +130,7 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid, unsigned cha
 
     // 接受数据并处理结果, 错误处理
     rc = recv(client_sock, &rspbuf, sizeof(struct rsp), 0);
-    printf("receive message");
+    printf("receive message\n");
 
     if (rc == -1)
     {
@@ -139,30 +139,32 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid, unsigned cha
         exit(1);
     }
 
+    printf("%d \n", rspbuf.stat);
     // 处理结果
     switch (rspbuf.stat)
     {
     case OP_SUCCESS:
-        printf("operation success!");
+        printf("operation success!\n");
         break;
     case OP_FAIL:
-        printf("operation fail!");
+        printf("operation fail!\n");
         break;
     case OP_NOT_FIND:
-        printf("do not find user or file level!") break;
+        printf("do not find user or file level!\n");
+        break;
     default:
-        printf("some error!");
+        printf("some error!\n");
         break;
     }
 
     if (op == GET_USER_LEVEL)
     {
-        printf("get user level : %c", level);
+        printf("get user level : %d\n", rspbuf.level);
     }
 
     if (op == GET_FILE_LEVEL)
     {
-        printf("get file level : %c", level);
+        printf("get file level : %d\n", rspbuf.level);
     }
 
     // 关闭socket 删除文件
@@ -197,8 +199,8 @@ int main(int argc, char **argv)
 {
     int ch;
     unsigned char option = 0;
-    unsigned char mode1 = -1; // u f u+f
-    unsigned char mode2 = -1; // g/s/d
+    int mode1 = -1; // u f u+f
+    int mode2 = -1; // g/s/d
     unsigned char level = 0;
     unsigned long inode = 0;
     unsigned long uid = 0;
@@ -213,6 +215,7 @@ int main(int argc, char **argv)
         case 's':
             if (mode2 != -1)
             {
+                printf("s");
                 usage();
                 return -1;
             }
@@ -221,6 +224,7 @@ int main(int argc, char **argv)
         case 'g':
             if (mode2 != -1)
             {
+                printf("g");
                 usage();
                 return -1;
             }
@@ -229,6 +233,7 @@ int main(int argc, char **argv)
         case 'd':
             if (mode2 != -1)
             {
+                printf("d");
                 usage();
                 return -1;
             }
@@ -245,10 +250,11 @@ int main(int argc, char **argv)
             memcpy(username, optarg, strlen(optarg));
             break;
         case 'l':
-            level = optarg[0];
+            level = optarg[0]-'0';
             // level只能是特定的几个值，否则调用usage
             break;
         default:
+            printf("other");
             usage();
             return -1;
         }
@@ -290,7 +296,7 @@ int main(int argc, char **argv)
         }
     }
 
-    printf("start handle");
+    printf("start handle\n");
     handle(option, inode, uid, level);
 
     return 0;
