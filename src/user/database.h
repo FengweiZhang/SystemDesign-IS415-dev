@@ -26,7 +26,7 @@
 
 // define other signals
 #define SEPARATOR "*************************************************\n"
-
+#define OBJECT_NOT_DEFINE -1
 
 static int callback(void*flag, int n_col, char**data, char**col_name);
 

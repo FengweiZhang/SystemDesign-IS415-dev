@@ -19,6 +19,7 @@
 #include <fcntl.h>
 
 #include "../common/prm_error.h"
+#include "operation.h"
 
 // Unix Domain Socket通信使用的socket文件路径
 #define SERVER_PATH "/tmp/server.socket"
@@ -141,9 +142,27 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid, unsigned cha
     // 处理结果
     switch (rspbuf.stat)
     {
-    case 1:
-        printf("success!");
+    case OP_SUCCESS:
+        printf("operation success!");
         break;
+    case OP_FAIL:
+        printf("operation fail!");
+        break;
+    case OP_NOT_FIND:
+        printf("do not find user or file level!") break;
+    default:
+        printf("some error!");
+        break;
+    }
+
+    if (op == GET_USER_LEVEL)
+    {
+        printf("get user level : %c", level);
+    }
+
+    if (op == GET_FILE_LEVEL)
+    {
+        printf("get file level : %c", level);
     }
 
     // 关闭socket 删除文件
