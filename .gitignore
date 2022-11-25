@@ -2,3 +2,5 @@
 zrz_test
 database/a.out
 database/test.db
+src/user/client.exe
+src/user/server.exe

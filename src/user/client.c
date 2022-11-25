@@ -18,7 +18,7 @@
 #include <pwd.h>
 #include <fcntl.h>
 
-#include "../common/prm_error.h"
+#include "socket_error.h"
 #include "operation.h"
 
 // Unix Domain Socket通信使用的socket文件路径
@@ -184,7 +184,8 @@ void usage(void)
                    "  -g (get)	get level\n"
                    "  -d (delete)	delete level\n"
                    "  -u (user)	input user name for operation\n"
-                   "  -f (file)	input file path for operation\n");
+                   "  -f (file)	input file path for operation\n"
+                   "  -l (level)	set level\n");
 }
 
 /**
@@ -218,8 +219,8 @@ int main(int argc, char **argv)
                 usage();
                 return -1;
             }
-            level = optarg[0] - '0';
             mode2 = 0;
+            level = optarg[0]-'0';
             break;
         case 'g':
             if (mode2 != -1)
@@ -272,6 +273,7 @@ int main(int argc, char **argv)
         {
             // 获得文件的inode节点号
             inode = file_stat.st_ino;
+            printf("file inode : %lu \n",inode);
         }
         else
         {
