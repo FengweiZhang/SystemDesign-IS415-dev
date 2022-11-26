@@ -162,6 +162,11 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
         // 文件标识符无法解析，直接调用原函数
         ret = real_write(regs);
     }
+    else if (f_type == FILE_U)
+    {
+        // 文件类型无法判断，调用原函数
+        ret = real_write(regs);
+    }
     else
     {
         printk("Hook S: %lu uid = %u type = %d\n", ino, uid, f_type);
