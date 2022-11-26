@@ -55,24 +55,20 @@ static sys_call_ptr_t* get_sys_call_table(void)
  */
 
 
-typedef asmlinkage long (*sys_openat_t)(struct pt_regs*);
+typedef asmlinkage long (*sys_call_t)(struct pt_regs*);
 
-sys_openat_t real_openat;
+sys_call_t real_openat;
+sys_call_t real_read;
 
-asmlinkage long my_sys_openat(struct pt_regs * reg)
+asmlinkage long my_sys_openat(struct pt_regs * regs)
 {
     // printk("Hook success\n");
-    return real_openat(reg);
+    return real_openat(regs);
 }
 
-
-typedef asmlinkage long (*sys_read_t)(unsigned int fd, char __user *buf, size_t count);
-
-sys_read_t real_read;
-
-asmlinkage long my_sys_read(unsigned int fd, char __user *buf, size_t count)
+asmlinkage long my_sys_read(struct pt_regs * regs)
 {
-    return real_read(fd, buf, count);
+    return real_read(regs);
 }
 
 
