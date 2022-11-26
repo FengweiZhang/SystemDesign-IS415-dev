@@ -49,14 +49,16 @@ static sys_call_ptr_t* get_sys_call_table(void)
 }
 
 
-typedef asmlinkage long (*sys_openat_t)(struct pt_regs*);
+typedef asmlinkage long (*sys_openat_t)(int dfd, const char __user *filename,
+                int flags, umode_t mode);
 
 sys_openat_t real_openat;
 
-asmlinkage long my_sys_openat(struct pt_regs * reg)
+asmlinkage long my_sys_openat(int dfd, const char __user *filename,
+                int flags, umode_t mode)
 {
     // printk("Hook success\n");
-    return real_openat(reg);
+    return real_openat(dfd, filename, flags, mode);
 }
 
 
