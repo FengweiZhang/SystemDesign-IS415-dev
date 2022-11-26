@@ -12,11 +12,16 @@
 #define FILE_BLK    5   // 块设备
 #define FILE_FIFO   6   // FIFO文件
 #define FILE_SOCK   7   // SOCKET文件
-
 // 自定义文件类型
 #define FILE_STDIN  8   // STD IN
 #define FILE_STDOUT 9   // STD OUT
 #define FILE_STDERR 10  // STD ERROR
+
+
+// 权限类型
+#define P_IO        1   // IO操作
+
+
 
 int prm_hook_init(void);
 

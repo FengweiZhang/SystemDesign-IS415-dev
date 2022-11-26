@@ -90,6 +90,24 @@ int get_info_from_fd(unsigned int fd, unsigned long * ino, uid_t * uid, int *typ
 }
 
 
+/**
+ * @brief 查询权限信息
+ * 
+ * @param ino inode号
+ * @param uid 用户uid
+ * @param type 权限类型
+ * @return int 允许 1, 禁止0
+ */
+int check_privilege(unsigned long ino, uid_t uid, int type)
+{
+    if(type == P_IO)
+    {
+        printk("Check IO privilege\n");
+    }
+    return 1;
+}
+
+
 // change linux kernel memory write protection
 inline void write_cr0_new(unsigned long cr0){ asm volatile("mov %0,%%cr0" : "+r"(cr0), "+m"(__force_order)); }
 // write protextion off
@@ -167,6 +185,12 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
         // 文件类型无法判断，调用原函数
         ret = real_write(regs);
     }
+    else if (f_type == FILE_STDIN || f_type == FILE_STDOUT || f_type == FILE_STDERR)
+    {
+        check_privilege(ino, uid, f_type);
+        ret = real_write(regs);
+    }
+
     else
     {
         printk("Hook S: %lu uid = %u type = %d\n", ino, uid, f_type);
