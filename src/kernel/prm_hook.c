@@ -187,7 +187,7 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
     }
     else if (f_type == FILE_STDIN || f_type == FILE_STDOUT || f_type == FILE_STDERR)
     {
-        check_privilege(ino, uid, f_type);
+        check_privilege(ino, uid, P_IO);
         ret = real_write(regs);
     }
 
