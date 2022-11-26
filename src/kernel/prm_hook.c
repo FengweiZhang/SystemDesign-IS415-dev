@@ -81,10 +81,16 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
     {
         struct file * f = NULL;
         struct inode * f_inode = NULL;
-        
+
+        // get full path
+        // char buf[1000];
+        // int buflen = 999;
+
         f = fget_raw(fd);
         if (f)
         {
+            // printk full path
+            // printk("Full Path: %s", dentry_path_raw(f->f_path.dentry,buf,buflen));
             f_inode = f->f_inode;
             printk("Get i_node: %lu", f_inode->i_ino);
         }
