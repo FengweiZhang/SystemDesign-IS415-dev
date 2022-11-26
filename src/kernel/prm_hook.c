@@ -79,22 +79,29 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
     unsigned int fd = regs->di;
     if (fd != 0 && fd != 1 && fd != 2)
     {
-        struct file * f = NULL;
+        struct file * file_p = NULL;
         struct inode * f_inode = NULL;
+        unsigned long ino = 0;
 
         // get full path
         // char buf[1000];
         // int buflen = 999;
 
-        f = fget_raw(fd);
-        if (f)
+        file_p = fget_raw(fd);
+        if (file_p)
         {
             // printk full path
             // printk("Full Path: %s", dentry_path_raw(f->f_path.dentry,buf,buflen));
-            f_inode = f->f_inode;
-            printk("Get i_node: %lu", f_inode->i_ino);
+            f_inode = file_p->f_inode;
+            ino = f_inode->i_ino;
+            // printk("Get i_node: %lu", f_inode->i_ino);
         }
-        printk("Hook S: %u\n", fd);
+        if (ino == 2236980)
+        {
+            printk("Block\n");
+            return -1;
+        }
+        printk("Hook S: %lu\n", ino);
     }
 
     return real_write(regs);
