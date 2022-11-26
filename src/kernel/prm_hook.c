@@ -80,11 +80,13 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
     if (fd != 0 && fd != 1 && fd != 2)
     {
         struct file * f = NULL;
-        f = fget_raw(fd);
         struct inode * f_inode = NULL;
+        
+        f = fget_raw(fd);
         if (f)
         {
-            printk("Get file struct ");
+            f_inode = f->f_inode;
+            printk("Get i_node: %lu", f_inode->i_ino);
         }
         printk("Hook S: %u\n", fd);
     }
