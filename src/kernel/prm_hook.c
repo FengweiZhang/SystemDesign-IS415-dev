@@ -70,9 +70,9 @@ typedef asmlinkage long (*sys_read_t)(unsigned int fd, char __user *buf, size_t 
 
 sys_read_t real_read;
 
-asmlinkage long my_sys_read(unsigned int fd, char __user *buf, size_t count);
+asmlinkage long my_sys_read(unsigned int fd, char __user *buf, size_t count)
 {
-    return real_read(fg, buf, count);
+    return real_read(fd, buf, count);
 }
 
 
@@ -93,7 +93,7 @@ int prm_hook_init(void)
 
     real_openat = (void *)sys_call_ptr[__NR_openat];
     sys_call_ptr[__NR_openat] = (sys_call_ptr_t)my_sys_openat;
-    read_read = (void *)sys_call_ptr[__NR_read];
+    real_read = (void *)sys_call_ptr[__NR_read];
     sys_call_ptr[__NR_read] = (sys_call_ptr_t)my_sys_read;
 
 
