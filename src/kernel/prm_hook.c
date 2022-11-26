@@ -26,6 +26,59 @@ static struct kprobe kp = {
     .symbol_name = "sys_call_table"
 };
 
+/**
+ * @brief 从文件描述符获取文件的信息
+ * 
+ * @param fd 文件描述符
+ * @param ino 对应的inode号
+ * @param uid 当前的用户uid
+ * @param type 文件的类型
+ * @return int PRM_SUCCESS 成功, PRM_ERROR 失败
+ */
+int get_info_from_fd(unsigned int fd, unsigned long * ino, uid_t * uid, int *type)
+{
+    struct file *file_p = NULL;
+    struct inode * f_inode = NULL;
+    umode_t imode = 0;      // unsigned short
+
+    // 获取 uid
+    *uid = current_uid().val;   // unsigned int
+    // 获取fd对应的file struct
+    file_p = fget_raw(fd);
+    if (!file_p)
+    {
+        // 获取失败
+        return PRM_ERROR;
+    }
+    // 获取 ino
+    f_inode = file_p->f_inode;
+    *ino = f_inode->i_ino;
+
+    // 获取文件类型
+    imode = f_inode->i_mode;
+    if(S_ISLNK(imode)){
+        *type = FILE_LNK;
+    }else if(S_ISREG(imode)){
+        *type = FILE_REG;
+    }else if(S_ISDIR(imode)){
+        *type = FILE_DIR;
+    }else if(S_ISCHR(imode)){
+        *type = FILE_CHR;
+    }else if(S_ISBLK(imode)){
+        *type = FILE_BLK;
+    }else if(S_ISFIFO(imode)){
+        *type = FILE_FIFO;
+    }else if(S_ISSOCK(imode)){
+        *type = FILE_SOCK;
+    }
+
+    return PRM_SUCCESS;
+
+    // get full path
+    // char buf[1000];
+    // int buflen = 999;
+    // printk("Full Path: %s", dentry_path_raw(f->f_path.dentry,buf,buflen));
+}
 
 
 // change linux kernel memory write protection
@@ -60,22 +113,9 @@ typedef asmlinkage long (*sys_call_t)(struct pt_regs*);
 
 
 // 原始的系统调用函数
-sys_call_t real_openat;
 sys_call_t real_read;
 sys_call_t real_write;
 
-/**
- * @brief 对sys_openat重载
- * asmlinkage long sys_openat(int dfd, const char __user *filename, int flags, umode_t mode);
- * 
- * @param regs 
- * @return asmlinkage 
- */
-asmlinkage long my_sys_openat(struct pt_regs * regs)
-{
-    // printk("Hook success\n");
-    return real_openat(regs);
-}
 
 /**
  * @brief 对sys_read重载
@@ -101,34 +141,17 @@ asmlinkage long my_sys_read(struct pt_regs * regs)
 asmlinkage long my_sys_write(struct pt_regs * regs)
 {
     // printk("Hook succeed %lu\n", regs->di);
-    unsigned int fd = regs->di;
-
-    struct file * file_p = NULL;
-    struct inode * f_inode = NULL;
+    unsigned int fd = 0;
     unsigned long ino = 0;
-    umode_t imode = 0;      // unsigned short
-    uid_t uid = 0;          // unsigned int
+    uid_t uid = 0;
+    int f_type = 0;
 
-    // 获取当前的用户 uid
-    uid = current_uid().val;
-
-    if (fd != 0 && fd != 1 && fd != 2)
+    fd = regs->di;
+    if(get_info_from_fd(fd, &ino, &uid, &f_type) == PRM_ERROR)
     {
-        // get full path
-        // char buf[1000];
-        // int buflen = 999;
 
-        file_p = fget_raw(fd);
-        if (file_p)
-        {
-            // printk full path
-            // printk("Full Path: %s", dentry_path_raw(f->f_path.dentry,buf,buflen));
-            f_inode = file_p->f_inode;
-            ino = f_inode->i_ino;
-            // printk("Get i_node: %lu", f_inode->i_ino);
-        }
-        printk("Hook S: %lu uid = %u\n", ino, uid);
     }
+    printk("Hook S: %lu uid = %u type = %d\n", ino, uid, f_type);
     return real_write(regs);
 }
 
@@ -148,11 +171,9 @@ int prm_hook_init(void)
     // hook system call
     write_protection_off(); 
 
-    real_openat =   (void *)sys_call_ptr[__NR_openat];
     real_read =     (void *)sys_call_ptr[__NR_read];
     real_write =    (void *)sys_call_ptr[__NR_write];
     
-    sys_call_ptr[__NR_openat] =     (sys_call_ptr_t)my_sys_openat;
     sys_call_ptr[__NR_read] =       (sys_call_ptr_t)my_sys_read;
     sys_call_ptr[__NR_write] =      (sys_call_ptr_t)my_sys_write;
 
@@ -172,7 +193,6 @@ int prm_hook_exit(void)
     // clear hook
     write_protection_off();
 
-    sys_call_ptr[__NR_openat] =     (sys_call_ptr_t)real_openat;
     sys_call_ptr[__NR_read] =       (sys_call_ptr_t)real_read;
     sys_call_ptr[__NR_write] =      (sys_call_ptr_t)real_write;
 
