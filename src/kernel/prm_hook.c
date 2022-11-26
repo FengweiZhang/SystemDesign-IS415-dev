@@ -49,6 +49,12 @@ static sys_call_ptr_t* get_sys_call_table(void)
 }
 
 
+/*
+ * rdi  | rsi   | rdx   | r10
+ * 1st  | 2nd   | 3rd   | 4th 
+ */
+
+
 typedef asmlinkage long (*sys_openat_t)(struct pt_regs*);
 
 sys_openat_t real_openat;
@@ -57,6 +63,16 @@ asmlinkage long my_sys_openat(struct pt_regs * reg)
 {
     // printk("Hook success\n");
     return real_openat(reg);
+}
+
+
+typedef asmlinkage long (*sys_read_t)(unsigned int fd, char __user *buf, size_t count);
+
+sys_read_t real_read;
+
+asmlinkage long my_sys_read(unsigned int fd, char __user *buf, size_t count);
+{
+    return real_read(fg, buf, count);
 }
 
 
@@ -74,8 +90,13 @@ int prm_hook_init(void)
 
     // hook system call
     write_protection_off(); 
+
     real_openat = (void *)sys_call_ptr[__NR_openat];
     sys_call_ptr[__NR_openat] = (sys_call_ptr_t)my_sys_openat;
+    read_read = (void *)sys_call_ptr[__NR_read];
+    sys_call_ptr[__NR_read] = (sys_call_ptr_t)my_sys_read;
+
+
     write_protection_on();
     printk("%s %s: System calls hook set.\n", module_name, name);
 
@@ -91,7 +112,10 @@ int prm_hook_exit(void)
 {
     // clear hook
     write_protection_off();
+
     sys_call_ptr[__NR_openat] = (sys_call_ptr_t)real_openat;
+    sys_call_ptr[__NR_read] = (sys_call_ptr_t)real_read;
+
     write_protection_on();
     printk("%s %s: System calls hook unset.\n", module_name, name);
 
