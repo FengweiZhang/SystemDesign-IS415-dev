@@ -54,7 +54,7 @@ int get_info_from_fd(unsigned int fd, unsigned long * ino, uid_t * uid, int *typ
     f_inode = file_p->f_inode;
     *ino = f_inode->i_ino;
 
-    // 获取文件类型
+    // 获标准取文件类型
     imode = f_inode->i_mode;
     if(S_ISLNK(imode)){
         *type = FILE_LNK;
@@ -70,6 +70,15 @@ int get_info_from_fd(unsigned int fd, unsigned long * ino, uid_t * uid, int *typ
         *type = FILE_FIFO;
     }else if(S_ISSOCK(imode)){
         *type = FILE_SOCK;
+    }
+
+    // 获取自定义文件类型
+    if (fd == 0){
+        *type = FILE_STDIN;
+    }else if(fd == 1){
+        *type = FILE_STDOUT;
+    }else if(fd == 2){
+        *type = FILE_STDERR;
     }
 
     return PRM_SUCCESS;
@@ -140,7 +149,8 @@ asmlinkage long my_sys_read(struct pt_regs * regs)
  */
 asmlinkage long my_sys_write(struct pt_regs * regs)
 {
-    // printk("Hook succeed %lu\n", regs->di);
+    long ret = -1;
+
     unsigned int fd = 0;
     unsigned long ino = 0;
     uid_t uid = 0;
@@ -149,10 +159,15 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
     fd = regs->di;
     if(get_info_from_fd(fd, &ino, &uid, &f_type) == PRM_ERROR)
     {
-
+        // 文件标识符无法解析，直接调用原函数
+        ret = real_write(regs)
     }
-    printk("Hook S: %lu uid = %u type = %d\n", ino, uid, f_type);
-    return real_write(regs);
+    else
+    {
+        printk("Hook S: %lu uid = %u type = %d\n", ino, uid, f_type);
+    }
+    
+    return ret;
 }
 
 
