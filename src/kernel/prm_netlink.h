@@ -1,7 +1,7 @@
 #ifndef _PRM_NETLINK_H
 #define _PRM_NETLINK_H
 
-#include "../common/prm_error.h"
+#include "prm_error.h"
 
 #include <net/sock.h>
 #include <linux/netlink.h>

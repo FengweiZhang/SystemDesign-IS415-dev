@@ -24,3 +24,5 @@ src/kernel/prm.o
 src/kernel/prm_hook.o
 src/kernel/prm_module.o
 src/kernel/prm_netlink.o
+
+*.out
