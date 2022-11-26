@@ -160,11 +160,12 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
     if(get_info_from_fd(fd, &ino, &uid, &f_type) == PRM_ERROR)
     {
         // 文件标识符无法解析，直接调用原函数
-        ret = real_write(regs)
+        ret = real_write(regs);
     }
     else
     {
         printk("Hook S: %lu uid = %u type = %d\n", ino, uid, f_type);
+        ret = real_write(regs);
     }
     
     return ret;
