@@ -59,6 +59,7 @@ typedef asmlinkage long (*sys_call_t)(struct pt_regs*);
 
 sys_call_t real_openat;
 sys_call_t real_read;
+sys_call_t real_write;
 
 asmlinkage long my_sys_openat(struct pt_regs * regs)
 {
@@ -68,8 +69,29 @@ asmlinkage long my_sys_openat(struct pt_regs * regs)
 
 asmlinkage long my_sys_read(struct pt_regs * regs)
 {
+    // printk("Hook succeed %lu\n", regs->di);
     return real_read(regs);
 }
+
+asmlinkage long my_sys_write(struct pt_regs * regs)
+{
+    // printk("Hook succeed %lu\n", regs->di);
+    unsigned int fd = regs->di;
+    if (fd != 0 && fd != 1 && fd != 2)
+    {
+        struct file * f = NULL;
+        f = fget_raw(fd);
+        struct inode * f_inode = NULL;
+        if (f)
+        {
+            printk("Get file struct ");
+        }
+        printk("Hook S: %u\n", fd);
+    }
+
+    return real_write(regs);
+}
+
 
 
 /**
@@ -87,11 +109,13 @@ int prm_hook_init(void)
     // hook system call
     write_protection_off(); 
 
-    real_openat = (void *)sys_call_ptr[__NR_openat];
-    sys_call_ptr[__NR_openat] = (sys_call_ptr_t)my_sys_openat;
-    real_read = (void *)sys_call_ptr[__NR_read];
-    sys_call_ptr[__NR_read] = (sys_call_ptr_t)my_sys_read;
-
+    real_openat =   (void *)sys_call_ptr[__NR_openat];
+    real_read =     (void *)sys_call_ptr[__NR_read];
+    real_write =    (void *)sys_call_ptr[__NR_write];
+    
+    sys_call_ptr[__NR_openat] =     (sys_call_ptr_t)my_sys_openat;
+    sys_call_ptr[__NR_read] =       (sys_call_ptr_t)my_sys_read;
+    sys_call_ptr[__NR_write] =      (sys_call_ptr_t)my_sys_write;
 
     write_protection_on();
     printk("%s %s: System calls hook set.\n", module_name, name);
@@ -109,8 +133,9 @@ int prm_hook_exit(void)
     // clear hook
     write_protection_off();
 
-    sys_call_ptr[__NR_openat] = (sys_call_ptr_t)real_openat;
-    sys_call_ptr[__NR_read] = (sys_call_ptr_t)real_read;
+    sys_call_ptr[__NR_openat] =     (sys_call_ptr_t)real_openat;
+    sys_call_ptr[__NR_read] =       (sys_call_ptr_t)real_read;
+    sys_call_ptr[__NR_write] =      (sys_call_ptr_t)real_write;
 
     write_protection_on();
     printk("%s %s: System calls hook unset.\n", module_name, name);
