@@ -57,6 +57,9 @@ struct prm_msg {
 int u2k_socket_init();
 int u2k_socket_release();
 
+int u2k_connect();
+int u2k_disconnect();
+
 int u2k_send(char *buf, size_t len);
 ssize_t u2k_recv(char *buf, size_t buflen);
 

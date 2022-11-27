@@ -4,7 +4,6 @@ all:
 
 test:
 	gcc ./user_netlink.c ./user_netlink.h -o a.out
-	./a.out
 
 clean:
 	rm a.out

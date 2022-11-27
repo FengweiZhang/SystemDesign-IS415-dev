@@ -223,13 +223,19 @@ int u2k_disconnect()
 /**
  * @brief 重新与内核态建立连接
  * 
- * @return int 
+ * @return int PRM_SUCCESS成功，PRM_ERROR失败
  */
 int u2k_reconnect()
 {
     u2k_socket_release();
-    u2k_socket_init();
-
+    if(u2k_socket_init() != PRM_SUCCESS)
+    {
+        return PRM_ERROR;
+    }
+    if(u2k_connect() != PRM_SUCCESS)
+    {
+        return PRM_ERROR;
+    }
     return PRM_SUCCESS;
 }
 
