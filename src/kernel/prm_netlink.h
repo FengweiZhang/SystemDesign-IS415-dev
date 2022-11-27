@@ -25,9 +25,12 @@ struct prm_nlmsg {
 // 用户态与核心态之间发送的消息的结构
 struct prm_msg {
     s32     index;      // 在模块中使用atomic_t的值，为了减少处理，取值范围是signed int
-    u32     type;   
-    s32     result_type;
-    u64     sem_msg_ptr;
+    u32     type;       // 消息类型
+    u32     ino;            // inode编号
+    u32     uid;            // 用户uid
+    s32     p_type;         // 权限类型
+    s32     result_type;    // 权限查询结果
+    u64     sem_msg_ptr;    // 消息标识
 };
 
 // prm_msg的type的取值
