@@ -10,7 +10,7 @@
  */
 
 #include "user_netlink.h"
-
+#include <stdio.h>
 
 static int netlink_socket = -1;
 static struct sockaddr_nl  *user_addr = NULL;      // self address
@@ -19,7 +19,7 @@ static struct prm_nlmsg    *msg = NULL;            // message buffer
 
 
 /**
- * @brief create netlink socket, record address information
+ * @brief 创建netlink socket，填写地址信息
  * 
  * @return If this function succeeds, return PRM_SUCCESS, else return PRM_ERROR
  */
@@ -83,17 +83,12 @@ int u2k_socket_init()
 }
 
 /**
- * @brief close socket and release address information
+ * @brief 关闭socket，释放空间
  * 
  * @return PRM_SUCCESS
  */
 int u2k_socket_release()
 {
-    struct prm_msg mmm;
-    memset((void *)&mmm, 0, sizeof(mmm));
-    mmm.type = PRM_MSG_TYPE_DISCONNECT;
-    u2k_send((char *)&mmm, sizeof(struct prm_msg));
-
     close(netlink_socket);
     free(msg);
     free(user_addr);
@@ -107,18 +102,6 @@ int u2k_socket_release()
     return PRM_SUCCESS;
 }
 
-/**
- * @brief 重新与内核态建立连接
- * 
- * @return int 
- */
-int u2k_socket_reconnect()
-{
-    u2k_socket_release();
-    u2k_socket_init();
-
-    return PRM_SUCCESS;
-}
 
 /**
  * @brief send len bytes in buf to kernel module
@@ -168,13 +151,11 @@ ssize_t u2k_recv(char *buf, size_t buflen)
         perror("u2k recv buf is NULL!\n");
         return PRM_ERROR;
     }
-
     ssize_t len = -1;
     struct prm_nlmsg recv_msg;
     // recv msg
     socklen_t kernel_addrlen = sizeof(struct sockaddr_nl);
     len = recvfrom(netlink_socket, &recv_msg, sizeof(struct prm_nlmsg), 0, (struct sockaddr *)kernel_addr, &kernel_addrlen);
-
     if(len == -1)
     {
         perror("u2k recv failed!\n");
@@ -185,36 +166,123 @@ ssize_t u2k_recv(char *buf, size_t buflen)
         perror("u2k recv failed, buf is too short!\n");
         return PRM_ERROR;
     }
-
     memcpy(buf, recv_msg.msg_data, recv_msg.msg_len);
     return recv_msg.msg_len;
 }
 
+
+/**
+ * @brief 发送连接建立消息，建立连接
+ * 
+ * @return int PRM_SUCCESS 成功，PRM_ERROR 失败
+ */
+int u2k_connect()
+{
+    char buf[1024];
+    struct prm_msg msg;
+    int send_ret;
+    ssize_t recv_ret;
+    struct prm_msg * recv_msg_ptr;
+
+    // 填充消息内容
+    msg.index = 0;
+    msg.type = PRM_MSG_TYPE_CONNECT;
+    // 发送连接请求
+    send_ret = u2k_send((char*)&msg, sizeof(struct prm_msg));
+    if(send_ret != PRM_SUCCESS)
+    {
+        return PRM_ERROR;
+    }
+    // 等待确认消息
+    recv_ret = u2k_recv(buf, 1024);
+    recv_msg_ptr = (struct prm_msg *)buf;
+    if(recv_msg_ptr->type == PRM_MSG_TYPE_CONNECT_CONFIRM)
+    {
+        return PRM_SUCCESS;
+    }
+    return PRM_ERROR;
+}
+
+/**
+ * @brief 用户态断开与核心态的连接
+ * 
+ * @return int 
+ */
+int u2k_disconnect()
+{
+    struct prm_msg mmm;
+    memset((void *)&mmm, 0, sizeof(mmm));
+    mmm.type = PRM_MSG_TYPE_DISCONNECT;
+    u2k_send((char *)&mmm, sizeof(struct prm_msg));
+}
+
+
+/**
+ * @brief 重新与内核态建立连接
+ * 
+ * @return int PRM_SUCCESS成功，PRM_ERROR失败
+ */
+int u2k_reconnect()
+{
+    u2k_socket_release();
+    if(u2k_socket_init() != PRM_SUCCESS)
+    {
+        return PRM_ERROR;
+    }
+    if(u2k_connect() != PRM_SUCCESS)
+    {
+        return PRM_ERROR;
+    }
+    return PRM_SUCCESS;
+}
+
+
+int msg_handle(struct prm_msg *msg)
+{
+    struct prm_msg send_msg;
+    memset(&send_msg, 0, sizeof(struct prm_msg));
+    
+    // 判断收到的消息类型
+    if(msg->type == PRM_MSG_TYPE_CHECK)
+    {
+        // 权限检查
+        printf("Handle privilege check\n");
+
+        // 构建返回消息
+        send_msg.type = PRM_MSG_TYPE_RESULT;
+        send_msg.result_type = CHECK_RESULT_PASS;
+        send_msg.sem_msg_ptr = msg->sem_msg_ptr;
+        // 返回消息
+        u2k_send((char *)&send_msg, sizeof(struct prm_msg));
+    }
+    return PRM_SUCCESS;
+}
+
+
 int main ()
 {
-    char * buf = "123321";
+    char buf[1024];
     char msg[1024];
-
-    struct prm_msg mmm;
-    // memset(&mmm, 0, sizeof(mmm));
-    mmm.index = 0;
-    mmm.type = PRM_MSG_TYPE_CONNECT;
-
-    for(int i=0;i<5;i++)
-    {
-        printf("%08x\n", *((uint32_t *)(&mmm)+i));
-    }
-
+    
+    // scanf("%s", msg);
     u2k_socket_init();
     printf("init succees\n");
-    int rest = u2k_send(&mmm, sizeof(struct prm_msg));
-    printf("start msg send %d, sizeof %d\n", rest,sizeof(struct prm_msg));
-    
-    struct prm_msg *rrr = NULL;
-    ssize_t ret = u2k_recv(msg, 1024);
-    rrr = msg;
-    printf("Receive: %u", rrr->type);
 
+    // scanf("%s", msg);
+    u2k_connect();
+    printf("connect!\n");
+
+    u2k_recv(buf, 1024);
+    printf("rece msg\n");
+    msg_handle(buf);
+    printf("handel finish\n");
+
+    scanf("%s", msg);
+    u2k_disconnect();
+    printf("disconnect");
+
+    // scanf("%s", msg);
     u2k_socket_release();
+    printf("Release!");
     return 0;
 }

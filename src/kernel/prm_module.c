@@ -1,4 +1,4 @@
-#include "../common/prm_error.h"
+#include "prm_error.h"
 #include "prm_hook.h"
 #include "prm_netlink.h"
 
