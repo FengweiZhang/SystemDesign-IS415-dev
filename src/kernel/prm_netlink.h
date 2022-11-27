@@ -44,6 +44,10 @@ struct prm_msg {
 #define CHECK_RESULT_NOTPASS            (s32)(1)        // 无权访问
 #define CHECK_RESULT_PASS               (s32)(2)        // 有权访问
 
+// 权限类型
+#define P_IO        (s32)1      // IO操作
+
+
 // End: Same in both kernel mode and user mode
 
 #define SEM_WAIT_CYCLE      1000
@@ -65,7 +69,7 @@ int prm_netlink_exit(void);
 
 int k2u_send(char *buf, size_t len);
 
-int check_rights(void);
+int check_privilege(unsigned long ino, uid_t uid, int p_type, int *result);
 
 
 

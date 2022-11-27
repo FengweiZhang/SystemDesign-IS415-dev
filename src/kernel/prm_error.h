@@ -1,3 +1,4 @@
-#define PRM_SUCCESS 0
+#define PRM_SUCCESS     0
 
 #define PRM_ERROR -1
+#define PRM_ERROR_SERVEROFFLINE -2

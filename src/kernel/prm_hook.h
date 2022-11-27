@@ -18,8 +18,6 @@
 #define FILE_STDERR 10  // STD ERROR
 
 
-// 权限类型
-#define P_IO        1   // IO操作
 
 
 

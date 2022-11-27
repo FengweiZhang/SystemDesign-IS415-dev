@@ -19,25 +19,39 @@ static pid_t pid = -1;      // user space server pid (pid_t is int)
 static atomic_t index;      // prm_msg 消息 index
 
 /**
- * @brief 向用户态程序发送消息以查询权限是否满足
+ * @brief 查询权限信息
  * 
- * @return int 
+ * @param ino inode号
+ * @param uid 用户uid
+ * @param type 权限类型
+ * @return int 查询操作成功与否
  */
-int check_rights(void)
+int check_privilege(unsigned long ino, uid_t uid, int p_type, int *result)
 {
     struct prm_msg msg;
     struct sem_msg *ptr = NULL;
+
+    // 检查用户态服务器是否已经连接
+    if(pid==-1)
+    {
+        // 未连接
+        return PRM_ERROR_SERVEROFFLINE;
+    }
 
     // 设置共享内存，初始化对应的信息量，设置共享内存状态为ready
     ptr = kmalloc(sizeof(struct sem_msg), GFP_KERNEL);
     memset(ptr, 0, sizeof(struct sem_msg));
     ptr->status = SEM_STATUS_READY;
     sema_init(&(ptr->sem), 0);
-    
-    // 向内核态程序发送查询消息
+
+    // 构建消息
     msg.index = atomic_inc_return(&index);
     msg.type = PRM_MSG_TYPE_CHECK;
+    msg.ino = (u32)ino;
+    msg.uid = (u32)uid;
+    msg.p_type = (s32)p_type;
     msg.sem_msg_ptr = (u64)ptr;
+    // 向内核态程序发送查询消息
     k2u_send((char *)&msg, sizeof(struct sem_msg));
     // 等待返回消息
     down(&(ptr->sem));
@@ -46,14 +60,16 @@ int check_rights(void)
     kfree(ptr);
     if(ptr->status == SEM_STATUS_LOADED)
     {
-        return (int)(ptr->data);
+        *result = ptr->data;
+        return PRM_SUCCESS;
     }
     return PRM_ERROR;
 }
 
 
+
 /**
- * @brief Send len bytes data in buf to user space process.
+ * @brief 向用户态发送消息
  * 
  * @param buf   
  * @param len 
@@ -75,7 +91,7 @@ int k2u_send(char *buf, size_t len)
 
 
 /**
- * @brief message receive handle function
+ * @brief 用户态消息的处理函数
  *  
  */
 static void netlink_message_handle(struct sk_buff *skb)
