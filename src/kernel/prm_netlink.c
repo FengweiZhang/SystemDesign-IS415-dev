@@ -15,7 +15,7 @@ extern char* module_name;  // kernel module name
 
 static char *name = "Netlink";
 static struct sock *netlink_socket = NULL;  // netlink socket
-static pid_t pid = -1;      // user space server pid (pid_t is int)
+static pid_t pid = -1;      // user space server pid (pid_t is int)，同时是连接的状态
 static atomic_t index;      // prm_msg 消息 index
 
 /**
@@ -134,9 +134,10 @@ static void netlink_message_handle(struct sk_buff *skb)
     else if(ptr->type == PRM_MSG_TYPE_DISCONNECT)
     {
         // 用户态断开连接
-        // 这里没有检查是否是对应的程序要求断开连接，直接断开
+        // 这里没有检查是否确实为对应的程序要求断开连接，直接断开
         printk("%s %s: Disconnection message received from pid=%d, current connection pid=%d\n",
             module_name, name, msg->nlh.nlmsg_pid, pid);
+        // 重置连接状态
         pid = -1;
         printk("%s %s: Connection was closed\n", module_name, name);
 
@@ -161,6 +162,7 @@ static void netlink_message_handle(struct sk_buff *skb)
     else
     {
         // 出现了未知的消息类型
+        printk("Unknown message type\n");
         printk("%08x\n", *(((u32 *)ptr)+0));
         printk("%08x\n", *(((u32 *)ptr)+1));
         printk("%08x\n", *(((u32 *)ptr)+2));
@@ -168,20 +170,18 @@ static void netlink_message_handle(struct sk_buff *skb)
     }
 
 
-    
-
     kfree(buf);
 }
 
 
 /**
- * @brief Create netlink socket
+ * @brief 创建netlink socket
  * 
  * @return If this function succeeds, return 0, -1 indicates an error.
  */
 static int k2u_socket_create(void)
 {
-    // set message receive callback function
+    // 设置消息处理函数
     struct netlink_kernel_cfg cfg = {
         .input = netlink_message_handle,
     };
@@ -192,7 +192,7 @@ static int k2u_socket_create(void)
         printk("%s %s: [Error]Socket Create Failed!\n", module_name, name);
         return PRM_ERROR;
     }
-    printk("%s %s: Socket Create Succeed!\n", module_name, name);
+    printk("%s %s: Socket Create Succeed! Waiting for server to connect!\n", module_name, name);
 
     // 初始化 index
     atomic_set(&index, 0);
@@ -203,7 +203,7 @@ static int k2u_socket_create(void)
 
 
 /**
- * @brief Close netlink socket
+ * @brief 关闭netlink socket
  * 
  * @return 0
  */
@@ -217,13 +217,21 @@ static int k2u_socket_close(void)
     return PRM_SUCCESS;
 }
 
-
+/**
+ * @brief netlink模块初始化
+ * 
+ * @return int 
+ */
 int prm_netlink_init(void)
 {
     return k2u_socket_create();
 }
 
-
+/**
+ * @brief netlink模块卸载
+ * 
+ * @return int 
+ */
 int prm_netlink_exit(void)
 {
     return k2u_socket_close();

@@ -2,7 +2,7 @@
 #define _USER_NETLINK_H
 
 
-#include "../common/prm_error.h"
+#include "prm_error.h"
 
 #include <stdio.h>
 #include <sys/socket.h>
@@ -28,21 +28,29 @@ struct prm_nlmsg {
 // 用户态与核心态之间发送的消息的结构
 struct prm_msg {
     int32_t     index;      // 在模块中使用atomic_t的值，为了减少处理，取值范围是signed int
-    uint32_t    type;   
-    int32_t     result_type;
-    uint64_t    sem_msg_ptr;
+    uint32_t    type;       // 消息类型
+    uint32_t    ino;            // inode编号
+    uint32_t    uid;            // 用户uid
+    int32_t     p_type;         // 权限类型
+    int32_t     result_type;    // 权限查询结果
+    uint64_t    sem_msg_ptr;    // 消息标识
 };
 
 // prm_msg的type的取值
 #define PRM_MSG_TYPE_CONNECT            (uint32_t)0x00000001     // 用户态向核心态进行注册
-#define PRM_MSG_TYPE_CONNECT_CONFIRM    (uint32_t)0x00000002
+#define PRM_MSG_TYPE_CONNECT_CONFIRM    (uint32_t)0x00000002     // 核心态向用户台发送注册成功消息
 #define PRM_MSG_TYPE_CHECK              (uint32_t)0x00000003     // 核心态向用户态发起权限查询请求
 #define PRM_MSG_TYPE_RESULT             (uint32_t)0x00000004     // 权限查询结果: 
 #define PRM_MSG_TYPE_DISCONNECT         (uint32_t)0x00000005     // 用户态取消连接
 
 // prm_msg result_type 取值
-#define CHECK_RESULT_NOTPASS            (int32_t)(-1)       // 无权访问
-#define CHECK_RESULT_PASS               (int32_t)(0)        // 有权访问
+#define CHECK_RESULT_NOTPASS            (int32_t)(1)       // 无权访问
+#define CHECK_RESULT_PASS               (int32_t)(2)        // 有权访问
+
+
+// 权限类型
+#define P_IO        (int32_t)1      // IO操作
+
 
 // End: Same in both kernel mode and user mode
 
