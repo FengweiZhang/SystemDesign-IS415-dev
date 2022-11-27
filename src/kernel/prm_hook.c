@@ -181,6 +181,7 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
         // 常规文件
         if(ino = (unsigned long)2236977)
         {
+            printk("target check\n");
             int tmp = -1;
             tmp = check_privilege(ino, uid, P_IO, &p_result);
             if(tmp == PRM_SUCCESS)
