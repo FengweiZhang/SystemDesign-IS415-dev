@@ -240,24 +240,49 @@ int u2k_reconnect()
 }
 
 
+int msg_handle(struct prm_msg *msg)
+{
+    struct prm_msg send_msg;
+    memset(&send_msg, 0, sizeof(struct prm_msg));
+    
+    // 判断收到的消息类型
+    if(msg->type == PRM_MSG_TYPE_CHECK)
+    {
+        // 权限检查
+        printf("Handle privilege check\n");
+
+        // 构建返回消息
+        send_msg.type = PRM_MSG_TYPE_RESULT;
+        send_msg.result_type = CHECK_RESULT_PASS;
+        send_msg.sem_msg_ptr = msg->sem_msg_ptr;
+        // 返回消息
+        u2k_send((char *)&send_msg, sizeof(struct prm_msg));
+    }
+    return PRM_SUCCESS;
+}
+
+
 int main ()
 {
     char * buf = "123321";
     char msg[1024];
     
-    scanf("%s", msg);
+    // scanf("%s", msg);
     u2k_socket_init();
     printf("init succees\n");
 
-    scanf("%s", msg);
+    // scanf("%s", msg);
     u2k_connect();
     printf("connect!\n");
+
+    u2k_recv(buf, 1024);
+    msg_handle(buf);
 
     scanf("%s", msg);
     u2k_disconnect();
     printf("disconnect");
 
-    scanf("%s", msg);
+    // scanf("%s", msg);
     u2k_socket_release();
     printf("Release!");
     return 0;

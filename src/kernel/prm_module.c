@@ -17,7 +17,7 @@ MODULE_PARM_DESC(module_name, "Module name");
 static int prm_init(void)
 {
     prm_netlink_init();
-    // prm_hook_init();
+    prm_hook_init();
 
     // check_rights();
 
@@ -27,7 +27,7 @@ static int prm_init(void)
 
 static void prm_exit(void)
 {
-    // prm_hook_exit();
+    prm_hook_exit();
     prm_netlink_exit();
 
     printk("%s: Kernel module removed!\n", module_name);

@@ -210,64 +210,7 @@ int main(int argc, char **argv)
         while (1)
         {
         }
-        // // netlink协议使用sockaddr_nl地址
-        // struct sockaddr_nl src_sockaddr, dest_sockaddr;
-        // struct nlmsghdr * nlh = NULL;
-        // struct msghdr msg;
-        // struct iovec iov;
-
-        // // 创建地址并初始化
-        // nlh = (struct nlmsghdr *)malloc(NLMSG_SPACE(sizeof(unsigned long)));
-        // memset(& src_sockaddr, 0, sizeof(struct sockaddr_nl));
-        // memset(& dest_sockaddr, 0, sizeof(struct sockaddr_nl));
-        // memset(nlh, 0, NLMSG_SPACE(sizeof(unsigned long)));
-        // memset(& msg, 0, sizeof(struct msghdr));
-
-        // // 创建netlink的socket
-        // server_sock = socket(AF_NETLINK, SOCK_RAW, NETLINK_SAFE);
-        // // 创建用户态地址，pid需要设置为进程的pid
-        // // 实际上是一个socket标识，不同线程可以设置为不同的值
-        // // groups为多播组，设置为0表示不加入多播
-        // src_sockaddr.nl_family = AF_NETLINK;
-        // src_sockaddr.nl_pid = getpid();
-        // src_sockaddr.nl_groups = 0;
-        // // 绑定socket和地址
-        // bind(server_sock, (struct sockaddr *)& src_sockaddr, sizeof(struct sockaddr_nl));
-        // // 设置核心态用户地址，核心态的pid必须设置为0
-        // dest_sockaddr.nl_family = AF_NETLINK;
-        // dest_sockaddr.nl_pid = 0;
-        // dest_sockaddr.nl_groups = 0;
-        // // 设置netlink socket的信息头部
-        // nlh -> nlmsg_len = NLMSG_SPACE(sizeof(unsigned long));
-        // nlh -> nlmsg_pid = getpid();
-        // nlh -> nlmsg_flags = 0;
-        // // 设置iov 可以把多个信息通过一次系统调用发送
-        // iov.iov_base = (void *)nlh;
-        // iov.iov_len = NLMSG_SPACE(sizeof(unsigned long));
-        // // 设置接收地址
-        // msg.msg_name = (void *)& dest_sockaddr;
-        // msg.msg_namelen = sizeof(struct sockaddr_nl);
-        // msg.msg_iov = & iov;
-        // msg.msg_iovlen = 1;
-
-        // // 填充并发送初始化就绪数据
-        // * (unsigned long *)NLMSG_DATA(nlh) = (unsigned long)0xffffffff << 32;
-        // sendmsg(server_sock, & msg, 0);
-        // while (1) {
-        //     // 接收内核态的信息
-        //     recvmsg(server_sock, & msg, 0);
-        //     // 查询指定文件的属主
-        //     snprintf(sql, 63, SELECT2, * (unsigned long *)NLMSG_DATA(nlh));
-        //     * (unsigned long *)NLMSG_DATA(nlh) = 0;
-        //     sqlite3_exec(db, sql, callback_get_fileowner_or_check, (uid_t *)NLMSG_DATA(nlh), NULL);
-        //     // 将查询结果发送到内核
-        //     sendmsg(server_sock, & msg, 0);
-        // }
-
-        // // 关闭socket和数据库，释放内存
-        // close(server_sock);
-        // free(nlh);
-        // sqlite3_close(db);
+        
     }
     // 子进程使用socket与客户端之间通信
     else
