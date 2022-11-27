@@ -151,13 +151,11 @@ ssize_t u2k_recv(char *buf, size_t buflen)
         perror("u2k recv buf is NULL!\n");
         return PRM_ERROR;
     }
-    printf("12\n");
     ssize_t len = -1;
     struct prm_nlmsg recv_msg;
     // recv msg
     socklen_t kernel_addrlen = sizeof(struct sockaddr_nl);
     len = recvfrom(netlink_socket, &recv_msg, sizeof(struct prm_nlmsg), 0, (struct sockaddr *)kernel_addr, &kernel_addrlen);
-    printf("123\n");
     if(len == -1)
     {
         perror("u2k recv failed!\n");
@@ -168,7 +166,6 @@ ssize_t u2k_recv(char *buf, size_t buflen)
         perror("u2k recv failed, buf is too short!\n");
         return PRM_ERROR;
     }
-    printf("length: %d\n", recv_msg.msg_len);
     memcpy(buf, recv_msg.msg_data, recv_msg.msg_len);
     return recv_msg.msg_len;
 }
@@ -278,6 +275,7 @@ int main ()
     u2k_recv(buf, 1024);
     printf("rece msg\n");
     msg_handle(buf);
+    printf("handel finish\n");
 
     scanf("%s", msg);
     u2k_disconnect();
