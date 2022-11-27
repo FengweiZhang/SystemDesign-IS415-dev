@@ -224,11 +224,11 @@ int prm_hook_init(void)
     // hook system call
     write_protection_off(); 
 
-    real_read =     (void *)sys_call_ptr[__NR_read];
-    // real_write =    (void *)sys_call_ptr[__NR_write];
+    // real_read =     (void *)sys_call_ptr[__NR_read];
+    real_write =    (void *)sys_call_ptr[__NR_write];
     
-    sys_call_ptr[__NR_read] =       (sys_call_ptr_t)my_sys_read;
-    // sys_call_ptr[__NR_write] =      (sys_call_ptr_t)my_sys_write;
+    // sys_call_ptr[__NR_read] =       (sys_call_ptr_t)my_sys_read;
+    sys_call_ptr[__NR_write] =      (sys_call_ptr_t)my_sys_write;
 
     write_protection_on();
     printk("%s %s: System calls hook set.\n", module_name, name);
@@ -246,8 +246,8 @@ int prm_hook_exit(void)
     // clear hook
     write_protection_off();
 
-    sys_call_ptr[__NR_read] =       (sys_call_ptr_t)real_read;
-    // sys_call_ptr[__NR_write] =      (sys_call_ptr_t)real_write;
+    // sys_call_ptr[__NR_read] =       (sys_call_ptr_t)real_read;
+    sys_call_ptr[__NR_write] =      (sys_call_ptr_t)real_write;
 
     write_protection_on();
     printk("%s %s: System calls hook unset.\n", module_name, name);
