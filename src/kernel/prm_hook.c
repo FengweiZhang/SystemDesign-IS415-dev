@@ -176,7 +176,7 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
         int tmp = check_privilege(ino, uid, P_IO, &p_result);
         if(tmp == PRM_SUCCESS)
         {
-
+            printk("Privilege check yes\n");
         }
         else
         {
