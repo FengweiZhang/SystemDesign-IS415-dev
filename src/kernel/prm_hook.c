@@ -1,5 +1,6 @@
 #include "prm_hook.h"
 #include "prm_error.h"
+#include "prm_netlink.h"
 
 #include <linux/init.h>
 #include <linux/types.h>
@@ -90,22 +91,6 @@ int get_info_from_fd(unsigned int fd, unsigned long * ino, uid_t * uid, int *typ
 }
 
 
-/**
- * @brief 查询权限信息
- * 
- * @param ino inode号
- * @param uid 用户uid
- * @param type 权限类型
- * @return int 允许 1, 禁止0
- */
-int check_privilege(unsigned long ino, uid_t uid, int type)
-{
-    if(type == P_IO)
-    {
-        printk("Check IO privilege\n");
-    }
-    return 1;
-}
 
 
 // change linux kernel memory write protection
@@ -173,6 +158,7 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
     unsigned long ino = 0;
     uid_t uid = 0;
     int f_type = 0;
+    int p_result = 0;
 
     fd = regs->di;
     if(get_info_from_fd(fd, &ino, &uid, &f_type) == PRM_ERROR)
@@ -187,13 +173,35 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
     }
     else if (f_type == FILE_STDIN || f_type == FILE_STDOUT || f_type == FILE_STDERR)
     {
-        check_privilege(ino, uid, P_IO);
+        // IO
+        ret = real_write(regs);
+    }
+    else if (f_type == FILE_REG)
+    {
+        // 常规文件
+        if(ino == (unsigned long)2236977)
+        {
+            printk("target check\n");
+            int tmp = -1;
+            tmp = check_privilege(ino, uid, P_IO, &p_result);
+            if(tmp == PRM_SUCCESS)
+            {
+                printk("Privilege check yes\n");
+            }
+            else
+            {
+                if(tmp == PRM_ERROR_SERVEROFFLINE)
+                {
+                    printk("Server offline\n");
+                }
+            }
+        }
         ret = real_write(regs);
     }
 
     else
     {
-        printk("Hook S: %lu uid = %u type = %d\n", ino, uid, f_type);
+        // printk("Hook S: %lu uid = %u type = %d\n", ino, uid, f_type);
         ret = real_write(regs);
     }
     
@@ -216,10 +224,10 @@ int prm_hook_init(void)
     // hook system call
     write_protection_off(); 
 
-    real_read =     (void *)sys_call_ptr[__NR_read];
+    // real_read =     (void *)sys_call_ptr[__NR_read];
     real_write =    (void *)sys_call_ptr[__NR_write];
     
-    sys_call_ptr[__NR_read] =       (sys_call_ptr_t)my_sys_read;
+    // sys_call_ptr[__NR_read] =       (sys_call_ptr_t)my_sys_read;
     sys_call_ptr[__NR_write] =      (sys_call_ptr_t)my_sys_write;
 
     write_protection_on();
@@ -238,7 +246,7 @@ int prm_hook_exit(void)
     // clear hook
     write_protection_off();
 
-    sys_call_ptr[__NR_read] =       (sys_call_ptr_t)real_read;
+    // sys_call_ptr[__NR_read] =       (sys_call_ptr_t)real_read;
     sys_call_ptr[__NR_write] =      (sys_call_ptr_t)real_write;
 
     write_protection_on();

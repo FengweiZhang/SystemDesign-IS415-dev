@@ -25,9 +25,12 @@ struct prm_nlmsg {
 // 用户态与核心态之间发送的消息的结构
 struct prm_msg {
     s32     index;      // 在模块中使用atomic_t的值，为了减少处理，取值范围是signed int
-    u32     type;   
-    s32     result_type;
-    u64     sem_msg_ptr;
+    u32     type;       // 消息类型
+    u32     ino;            // inode编号
+    u32     uid;            // 用户uid
+    s32     p_type;         // 权限类型
+    s32     result_type;    // 权限查询结果
+    u64     sem_msg_ptr;    // 消息标识
 };
 
 // prm_msg的type的取值
@@ -40,6 +43,10 @@ struct prm_msg {
 // prm_msg result_type 取值
 #define CHECK_RESULT_NOTPASS            (s32)(1)        // 无权访问
 #define CHECK_RESULT_PASS               (s32)(2)        // 有权访问
+
+// 权限类型
+#define P_IO        (s32)1      // IO操作
+
 
 // End: Same in both kernel mode and user mode
 
@@ -62,7 +69,7 @@ int prm_netlink_exit(void);
 
 int k2u_send(char *buf, size_t len);
 
-int check_rights(void);
+int check_privilege(unsigned long ino, uid_t uid, int p_type, int *result);
 
 
 

@@ -15,29 +15,43 @@ extern char* module_name;  // kernel module name
 
 static char *name = "Netlink";
 static struct sock *netlink_socket = NULL;  // netlink socket
-static pid_t pid = -1;      // user space server pid (pid_t is int)
+static pid_t pid = -1;      // user space server pid (pid_t is int)，同时是连接的状态
 static atomic_t index;      // prm_msg 消息 index
 
 /**
- * @brief 向用户态程序发送消息以查询权限是否满足
+ * @brief 查询权限信息
  * 
- * @return int 
+ * @param ino inode号
+ * @param uid 用户uid
+ * @param type 权限类型
+ * @return int 查询操作成功与否
  */
-int check_rights(void)
+int check_privilege(unsigned long ino, uid_t uid, int p_type, int *result)
 {
     struct prm_msg msg;
     struct sem_msg *ptr = NULL;
+
+    // 检查用户态服务器是否已经连接
+    if(pid==-1)
+    {
+        // 未连接
+        return PRM_ERROR_SERVEROFFLINE;
+    }
 
     // 设置共享内存，初始化对应的信息量，设置共享内存状态为ready
     ptr = kmalloc(sizeof(struct sem_msg), GFP_KERNEL);
     memset(ptr, 0, sizeof(struct sem_msg));
     ptr->status = SEM_STATUS_READY;
     sema_init(&(ptr->sem), 0);
-    
-    // 向内核态程序发送查询消息
+
+    // 构建消息
     msg.index = atomic_inc_return(&index);
     msg.type = PRM_MSG_TYPE_CHECK;
+    msg.ino = (u32)ino;
+    msg.uid = (u32)uid;
+    msg.p_type = (s32)p_type;
     msg.sem_msg_ptr = (u64)ptr;
+    // 向内核态程序发送查询消息
     k2u_send((char *)&msg, sizeof(struct sem_msg));
     // 等待返回消息
     down(&(ptr->sem));
@@ -46,14 +60,16 @@ int check_rights(void)
     kfree(ptr);
     if(ptr->status == SEM_STATUS_LOADED)
     {
-        return (int)(ptr->data);
+        *result = ptr->data;
+        return PRM_SUCCESS;
     }
     return PRM_ERROR;
 }
 
 
+
 /**
- * @brief Send len bytes data in buf to user space process.
+ * @brief 向用户态发送消息
  * 
  * @param buf   
  * @param len 
@@ -75,7 +91,7 @@ int k2u_send(char *buf, size_t len)
 
 
 /**
- * @brief message receive handle function
+ * @brief 用户态消息的处理函数
  *  
  */
 static void netlink_message_handle(struct sk_buff *skb)
@@ -118,9 +134,10 @@ static void netlink_message_handle(struct sk_buff *skb)
     else if(ptr->type == PRM_MSG_TYPE_DISCONNECT)
     {
         // 用户态断开连接
-        // 这里没有检查是否是对应的程序要求断开连接，直接断开
+        // 这里没有检查是否确实为对应的程序要求断开连接，直接断开
         printk("%s %s: Disconnection message received from pid=%d, current connection pid=%d\n",
             module_name, name, msg->nlh.nlmsg_pid, pid);
+        // 重置连接状态
         pid = -1;
         printk("%s %s: Connection was closed\n", module_name, name);
 
@@ -145,6 +162,7 @@ static void netlink_message_handle(struct sk_buff *skb)
     else
     {
         // 出现了未知的消息类型
+        printk("Unknown message type\n");
         printk("%08x\n", *(((u32 *)ptr)+0));
         printk("%08x\n", *(((u32 *)ptr)+1));
         printk("%08x\n", *(((u32 *)ptr)+2));
@@ -152,20 +170,18 @@ static void netlink_message_handle(struct sk_buff *skb)
     }
 
 
-    
-
     kfree(buf);
 }
 
 
 /**
- * @brief Create netlink socket
+ * @brief 创建netlink socket
  * 
  * @return If this function succeeds, return 0, -1 indicates an error.
  */
 static int k2u_socket_create(void)
 {
-    // set message receive callback function
+    // 设置消息处理函数
     struct netlink_kernel_cfg cfg = {
         .input = netlink_message_handle,
     };
@@ -176,7 +192,7 @@ static int k2u_socket_create(void)
         printk("%s %s: [Error]Socket Create Failed!\n", module_name, name);
         return PRM_ERROR;
     }
-    printk("%s %s: Socket Create Succeed!\n", module_name, name);
+    printk("%s %s: Socket Create Succeed! Waiting for server to connect!\n", module_name, name);
 
     // 初始化 index
     atomic_set(&index, 0);
@@ -187,7 +203,7 @@ static int k2u_socket_create(void)
 
 
 /**
- * @brief Close netlink socket
+ * @brief 关闭netlink socket
  * 
  * @return 0
  */
@@ -201,13 +217,21 @@ static int k2u_socket_close(void)
     return PRM_SUCCESS;
 }
 
-
+/**
+ * @brief netlink模块初始化
+ * 
+ * @return int 
+ */
 int prm_netlink_init(void)
 {
     return k2u_socket_create();
 }
 
-
+/**
+ * @brief netlink模块卸载
+ * 
+ * @return int 
+ */
 int prm_netlink_exit(void)
 {
     return k2u_socket_close();
