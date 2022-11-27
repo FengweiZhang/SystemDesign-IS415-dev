@@ -179,7 +179,7 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
     else if (f_type == FILE_REG)
     {
         // 常规文件
-        if(ino = (unsigned long)2236977)
+        if(ino == (unsigned long)2236977)
         {
             printk("target check\n");
             int tmp = -1;
