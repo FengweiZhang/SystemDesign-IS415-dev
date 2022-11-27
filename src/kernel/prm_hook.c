@@ -173,16 +173,20 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
     }
     else if (f_type == FILE_STDIN || f_type == FILE_STDOUT || f_type == FILE_STDERR)
     {
-        int tmp = check_privilege(ino, uid, P_IO, &p_result);
-        if(tmp == PRM_SUCCESS)
+        if(ino = (unsigned long)2236977)
         {
-            printk("Privilege check yes\n");
-        }
-        else
-        {
-            if(tmp == PRM_ERROR_SERVEROFFLINE)
+            int tmp = -1;
+            tmp = check_privilege(ino, uid, P_IO, &p_result);
+            if(tmp == PRM_SUCCESS)
             {
-                printk("Server offline\n");
+                printk("Privilege check yes\n");
+            }
+            else
+            {
+                if(tmp == PRM_ERROR_SERVEROFFLINE)
+                {
+                    printk("Server offline\n");
+                }
             }
         }
         ret = real_write(regs);
@@ -213,11 +217,11 @@ int prm_hook_init(void)
     // hook system call
     write_protection_off(); 
 
-    // real_read =     (void *)sys_call_ptr[__NR_read];
-    real_write =    (void *)sys_call_ptr[__NR_write];
+    real_read =     (void *)sys_call_ptr[__NR_read];
+    // real_write =    (void *)sys_call_ptr[__NR_write];
     
-    // sys_call_ptr[__NR_read] =       (sys_call_ptr_t)my_sys_read;
-    sys_call_ptr[__NR_write] =      (sys_call_ptr_t)my_sys_write;
+    sys_call_ptr[__NR_read] =       (sys_call_ptr_t)my_sys_read;
+    // sys_call_ptr[__NR_write] =      (sys_call_ptr_t)my_sys_write;
 
     write_protection_on();
     printk("%s %s: System calls hook set.\n", module_name, name);
@@ -235,8 +239,8 @@ int prm_hook_exit(void)
     // clear hook
     write_protection_off();
 
-    // sys_call_ptr[__NR_read] =       (sys_call_ptr_t)real_read;
-    sys_call_ptr[__NR_write] =      (sys_call_ptr_t)real_write;
+    sys_call_ptr[__NR_read] =       (sys_call_ptr_t)real_read;
+    // sys_call_ptr[__NR_write] =      (sys_call_ptr_t)real_write;
 
     write_protection_on();
     printk("%s %s: System calls hook unset.\n", module_name, name);
