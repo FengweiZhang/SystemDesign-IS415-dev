@@ -173,6 +173,12 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
     }
     else if (f_type == FILE_STDIN || f_type == FILE_STDOUT || f_type == FILE_STDERR)
     {
+        // IO
+        ret = real_write(regs);
+    }
+    else if (f_type == FILE_REG)
+    {
+        // 常规文件
         if(ino = (unsigned long)2236977)
         {
             int tmp = -1;
