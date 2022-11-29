@@ -20,6 +20,7 @@
 
 #include "socket_error.h"
 #include "operation.h"
+#include "log.h"
 
 // Unix Domain Socket通信使用的socket文件路径
 #define SERVER_PATH "/tmp/server.socket"
@@ -145,26 +146,32 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid, unsigned cha
     {
     case OP_SUCCESS:
         printf("operation success!\n");
+        logwrite(info,"%s", "operation success!"); 
         break;
     case OP_FAIL:
         printf("operation fail!\n");
+        logwrite(warn,"%s", "operation fail!"); 
         break;
     case OP_NOT_FIND:
         printf("do not find user or file level!\n");
+        logwrite(warn,"%s", "do not find user or file level!"); 
         break;
     default:
         printf("some error!\n");
+        logwrite(error,"%s", "some error!"); 
         break;
     }
 
     if (op == GET_USER_LEVEL)
     {
         printf("get user level : %d\n", rspbuf.level);
+        logwrite(info,"get user level : %d", rspbuf.level); 
     }
 
     if (op == GET_FILE_LEVEL)
     {
         printf("get file level : %d\n", rspbuf.level);
+        logwrite(info,"get file level : %d", rspbuf.level); 
     }
 
     // 关闭socket 删除文件
@@ -263,6 +270,7 @@ int main(int argc, char **argv)
     if (getuid() != 0)
     {
         printf("Operation not Permitted\n");
+        logwrite(error,"%s","Operation not Permitted");
         return 0;
     }
     // 对应文件来说不存在要报错
@@ -278,6 +286,7 @@ int main(int argc, char **argv)
         else
         {
             printf("%s: No such file or directory\n", filepath);
+            logwrite(error,"%s: No such file or directory",filepath);
         }
     }
     // 对于用户名来说不存在要报错
@@ -291,6 +300,7 @@ int main(int argc, char **argv)
         else
         {
             printf("%s: No such user\n", username);
+            logwrite(error,"%s: No such user", username);
         }
     }
 

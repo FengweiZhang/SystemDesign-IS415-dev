@@ -19,11 +19,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 
 #include "socket_error.h"
 #include "database.h"
 #include "operation.h"
+#include "log.h"
 
 // 服务器使用的socket路径
 #define SOCK_PATH "/tmp/server.socket"
@@ -72,6 +72,7 @@ void success()
 void setUserLevel(char* uid, int level)
 {
     printf("set user %s,level: %d \n", uid,level);
+    logwrite(info,"set user %s,level: %d", uid,level); 
     int ret = db_set_right(db, "user_file", uid, level);
     if (ret == 0)
     {
@@ -90,6 +91,7 @@ void setUserLevel(char* uid, int level)
 void getUserLevel(char* uid)
 {
     printf("search user %s level\n", uid);
+    logwrite(info,"search user %s level", uid); 
     int level = db_search_right(db, "user_file", uid);
     if (level == -1)
     {
@@ -122,6 +124,7 @@ void deleteUserLevel(char* uid)
 void setFileLevel(char* inode, int level)
 {
     printf("set file %s,level: %d \n", inode,level);
+    logwrite(info,"set file %s,level: %d", inode,level); 
     int ret = db_set_right(db, "file", inode, level);
     if (ret == 0)
     {
@@ -140,6 +143,7 @@ void setFileLevel(char* inode, int level)
 void getFileLevel(char* inode)
 {
      printf("set file %s level\n", inode);
+     logwrite(info,"set file %s level", inode); 
     int level = db_search_right(db, "file", inode);
     if (level == -1)
     {
@@ -271,6 +275,7 @@ int main(int argc, char **argv)
                 continue;
             }
             printf("receive operation: %d\n",reqbuf.op);
+            logwrite(info,"receive operation: %d\n",reqbuf.op); 
             char uid_ch[20],ino_ch[20];
             // 根据请求的类型进行处理
             switch (reqbuf.op)
@@ -311,6 +316,7 @@ int main(int argc, char **argv)
                 break;
             default:
                 printf("some error");
+                logwrite(error,"%s","some error"); 
             }
             // 传输结束以后关闭连接
             close(client_sock);
