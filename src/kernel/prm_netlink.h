@@ -44,8 +44,12 @@ struct prm_msg {
 #define CHECK_RESULT_NOTPASS            (s32)(1)        // 无权访问
 #define CHECK_RESULT_PASS               (s32)(2)        // 有权访问
 
-// 权限类型
-#define P_IO        (s32)1      // IO操作
+// p_type 取值, 权限类型
+#define P_U             (s32)0      // 未定义类型
+#define P_STDIN         (s32)1      
+#define P_STDOUT        (s32)2      
+#define P_STDERR        (s32)3
+#define P_REG           (s32)4      // 常规文件
 
 
 // End: Same in both kernel mode and user mode

@@ -24,6 +24,7 @@ static atomic_t index;      // prm_msg 消息 index
  * @param ino inode号
  * @param uid 用户uid
  * @param type 权限类型
+ * @param result 存储查询结果的指针
  * @return int 查询操作成功与否
  */
 int check_privilege(unsigned long ino, uid_t uid, int p_type, int *result)

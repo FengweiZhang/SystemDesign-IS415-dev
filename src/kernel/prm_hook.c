@@ -56,6 +56,7 @@ int get_info_from_fd(unsigned int fd, unsigned long * ino, uid_t * uid, int *typ
     *ino = f_inode->i_ino;
 
     // 获标准取文件类型
+    *type = FILE_U;
     imode = f_inode->i_mode;
     if(S_ISLNK(imode)){
         *type = FILE_LNK;
@@ -164,29 +165,42 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
     if(get_info_from_fd(fd, &ino, &uid, &f_type) == PRM_ERROR)
     {
         // 文件标识符无法解析，直接调用原函数
-        ret = real_write(regs);
+        p_result = CHECK_RESULT_PASS;
     }
     else if (f_type == FILE_U)
     {
         // 文件类型无法判断，调用原函数
-        ret = real_write(regs);
+        p_result = CHECK_RESULT_PASS;
     }
-    else if (f_type == FILE_STDIN || f_type == FILE_STDOUT || f_type == FILE_STDERR)
+    else
     {
-        // IO
-        ret = real_write(regs);
-    }
-    else if (f_type == FILE_REG)
-    {
-        // 常规文件
-        if(ino == (unsigned long)2236977)
+        // 判断权限类型
+        int p_type = P_U;
+        if(f_type == FILE_STDIN){
+            p_type == P_STDIN;  // 标准输入
+        }
+        else if (f_type == FILE_STDOUT){
+            p_type == P_STDOUT;     // 标准输出
+        }
+        else if (f_type == FILE_STDERR){
+            p_type == P_STDERR;     // 错误输出
+        }
+        else if (f_type == FILE_REG){
+            p_type == P_REG;        // 标准文件
+        }
+
+        if(p_type == P_U)
         {
-            printk("target check\n");
-            int tmp = -1;
-            tmp = check_privilege(ino, uid, P_IO, &p_result);
-            if(tmp == PRM_SUCCESS)
+            // 未定义的文件类型，调用原函数
+            p_result = CHECK_RESULT_PASS;
+        }
+        else
+        {
+            int check_ret = PRM_ERROR;
+            check_ret = check_privilege(ino, uid, p_type, &p_result);
+            if (check_ret == PRM_SUCCESS)
             {
-                printk("Privilege check yes\n");
+                printk("Privilege check op right\n");
             }
             else
             {
@@ -195,13 +209,17 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
                     printk("Server offline\n");
                 }
             }
+            p_result = CHECK_RESULT_PASS;
         }
-        ret = real_write(regs);
     }
 
+    // 判断权限检查结果，是否不允许执行
+    if(p_result == CHECK_RESULT_NOTPASS)
+    {
+        ret = -1;
+    }
     else
     {
-        // printk("Hook S: %lu uid = %u type = %d\n", ino, uid, f_type);
         ret = real_write(regs);
     }
     
