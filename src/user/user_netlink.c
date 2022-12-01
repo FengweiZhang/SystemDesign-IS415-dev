@@ -236,7 +236,12 @@ int u2k_reconnect()
     return PRM_SUCCESS;
 }
 
-
+/**
+ * @brief 处理来自内核态的消息
+ * 
+ * @param msg 来自内核态的消息指针
+ * @return int 
+ */
 int msg_handle(struct prm_msg *msg)
 {
     struct prm_msg send_msg;
@@ -245,8 +250,12 @@ int msg_handle(struct prm_msg *msg)
     // 判断收到的消息类型
     if(msg->type == PRM_MSG_TYPE_CHECK)
     {
+        int result = 0;
+
         // 权限检查
         printf("Handle privilege check\n");
+
+        result = user_access_file(msg->ino, msg->uid, msg->p_type);
 
         // 构建返回消息
         send_msg.type = PRM_MSG_TYPE_RESULT;

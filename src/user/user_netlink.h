@@ -3,6 +3,7 @@
 
 
 #include "prm_error.h"
+#include "databaseExtension.h"
 
 #include <stdio.h>
 #include <sys/socket.h>
@@ -48,8 +49,13 @@ struct prm_msg {
 #define CHECK_RESULT_PASS               (int32_t)(2)        // 有权访问
 
 
-// 权限类型
-#define P_IO        (int32_t)1      // IO操作
+// p_type 取值, 权限类型
+#define P_U             (int32_t)0      // 未定义类型
+#define P_STDIN         (int32_t)1      
+#define P_STDOUT        (int32_t)2      
+#define P_STDERR        (int32_t)3
+#define P_REG           (int32_t)4      // 常规文件
+
 
 
 // End: Same in both kernel mode and user mode
@@ -59,9 +65,11 @@ int u2k_socket_release();
 
 int u2k_connect();
 int u2k_disconnect();
+int u2k_reconnect();
 
 int u2k_send(char *buf, size_t len);
 ssize_t u2k_recv(char *buf, size_t buflen);
 
+int msg_handle(struct prm_msg *msg);
 
 #endif
