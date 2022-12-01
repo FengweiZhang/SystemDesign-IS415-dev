@@ -177,16 +177,16 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
         // 判断权限类型
         int p_type = P_U;
         if(f_type == FILE_STDIN){
-            p_type == P_STDIN;  // 标准输入
+            p_type = P_STDIN;  // 标准输入
         }
         else if (f_type == FILE_STDOUT){
-            p_type == P_STDOUT;     // 标准输出
+            p_type = P_STDOUT;     // 标准输出
         }
         else if (f_type == FILE_STDERR){
-            p_type == P_STDERR;     // 错误输出
+            p_type = P_STDERR;     // 错误输出
         }
         else if (f_type == FILE_REG){
-            p_type == P_REG;        // 标准文件
+            p_type = P_REG;        // 标准文件
         }
 
         if(p_type == P_U)
@@ -204,7 +204,7 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
             }
             else
             {
-                if(tmp == PRM_ERROR_SERVEROFFLINE)
+                if(check_ret == PRM_ERROR_SERVEROFFLINE)
                 {
                     printk("Server offline\n");
                 }
