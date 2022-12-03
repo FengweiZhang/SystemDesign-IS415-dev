@@ -253,7 +253,8 @@ asmlinkage long my_sys_reboot(struct pt_regs * regs)
             // 权限查询出错，默认通过
             p_result = CHECK_RESULT_PASS;
         }
-
+        // 若成功查询，结果已经放入了p_result中
+        
         // debug 先设置为都通过
         p_result = CHECK_RESULT_PASS;
     }
@@ -280,9 +281,19 @@ asmlinkage long my_sys_reboot(struct pt_regs * regs)
 asmlinkage long my_sys_socket(struct pt_regs *regs)
 {
     long ret = -1;
+    uid_t uid;
     int p_result = 0;
+    int check_ret = PRM_ERROR;
 
-    printk("socket create\n");
+    uid = current_uid().val;
+    printk("socket create %u\n", uid);
+    check_ret = check_privilege(0, uid, P_NET, &p_result);
+    if(check_ret != PRM_SUCCESS)
+    {
+        // 权限查询出错，默认通过
+        p_result = CHECK_RESULT_PASS;
+    }
+
     // debug 都通过
     p_result = CHECK_RESULT_PASS;
 
