@@ -326,16 +326,23 @@ asmlinkage long my_sys_execve(struct pt_regs *regs)
     char dmesg_name[64] = "/usr/bin/dmesg";
 
     uid = current_uid().val;
-    printk("execve: %u: \n", uid);
-
+    // printk("execve: %u: \n", uid);
+    // kernel 不能直接操作user space的内存，因此需要现复制
     copy_from_user(filename, (char *)(regs->di), 4096);
     // printk("%s\n", filename);
 
     if (strcmp(dmesg_name, filename) == 0)
     {
-        printk("%s\n", filename);
+        // 判断是否是 demsg 命令
+        printk("execv: %s\n", filename);
+        check_ret = check_privilege(0, uid, &p_result);
+    }
+    else
+    {
+        p_result = CHECK_RESULT_PASS;    
     }
 
+    // debug
     p_result = CHECK_RESULT_PASS;
 
     if(p_result != CHECK_RESULT_NOTPASS)

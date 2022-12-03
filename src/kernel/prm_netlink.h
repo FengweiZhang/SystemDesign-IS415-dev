@@ -52,6 +52,7 @@ struct prm_msg {
 #define P_REG           (s32)4      // 常规文件
 #define P_REBOOT        (s32)5      // reboot权限
 #define P_NET           (s32)6      // 网络权限
+#define P_DEMESG        (s32)7      // demsg 权限
 
 // End: Same in both kernel mode and user mode
 
