@@ -300,13 +300,15 @@ int msg_handle(struct prm_msg *msg)
         }
         else if (msg->p_type == P_STDOUT)
         {
-            printf("Check rights: STDOUT\n");
+            // printf("Check rights: STDOUT\n");
             if(msg->uid == 1001)
             {
+                printf("Check rights: STDOUT\n");
                 send_msg.result_type = CHECK_RESULT_NOTPASS;
             }
             else
             {
+                printf("Check rights: STDOUT\n");
                 send_msg.result_type = CHECK_RESULT_PASS;
             }
         }
