@@ -222,7 +222,7 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
     else
     {
         if (p_type == P_STDIN) printk("Block: STDIN%u\n", uid);
-        if (p_type == P_STDOUT) printk("Block: STDIN%u\n", uid);
+        if (p_type == P_STDOUT) printk("Block: STDOUT%u\n", uid);
         if (p_type == P_STDERR) printk("Block: STDERR%u\n", uid);
         if (p_type == P_REG) printk("Block: REG file uid=%u inode=%ld\n", uid, ino);
     }

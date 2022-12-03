@@ -123,10 +123,11 @@ int u2k_send(char *buf, size_t len)
         return PRM_ERROR;
     }
 
+    printf("try to send 1\n");
     memset(&(msg->msg_len), 0, PAYLOAD_MAX_SIZE+4);
     memcpy(msg->msg_data, buf, len);
     msg->msg_len = len;
-
+    printf("try to send 2\n");
     ssize_t send_len = sendto(netlink_socket, msg, msg->nlh.nlmsg_len, 0, (struct sockaddr *)kernel_addr, sizeof(struct sockaddr_nl));
     // printf("=========\n");
     if(send_len == -1)
