@@ -330,7 +330,6 @@ asmlinkage long my_sys_execve(struct pt_regs *regs)
     copy_from_user(filename, (char *)(regs->di), 4096);
     printk("%s\n", filename);
 
-    copy_from_user();
 
     p_result = CHECK_RESULT_PASS;
 
