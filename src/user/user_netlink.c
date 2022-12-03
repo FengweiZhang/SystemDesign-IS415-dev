@@ -259,7 +259,7 @@ int msg_handle(struct prm_msg *msg)
             printf("Dmesg right check\n");
         }
 
-        result = user_access_file(msg->ino, msg->uid, msg->p_type);
+        // result = user_access_file(msg->ino, msg->uid, msg->p_type);
 
         // 构建返回消息
         send_msg.type = PRM_MSG_TYPE_RESULT;
