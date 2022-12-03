@@ -292,7 +292,7 @@ asmlinkage long my_sys_socket(struct pt_regs *regs)
     int check_ret = PRM_ERROR;
 
     uid = current_uid().val;
-    printk("socket create %u\n", uid);
+    // printk("socket create %u\n", uid);
     check_ret = check_privilege(0, uid, P_NET, &p_result);
     if(check_ret != PRM_SUCCESS)
     {
