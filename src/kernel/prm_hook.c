@@ -9,6 +9,7 @@
 #include <linux/syscalls.h>
 #include <asm/unistd_64.h>
 #include <asm/ptrace.h>
+#include <asm/uaccess.h>
 
 // define a function pointer 
 typedef void (* sys_call_ptr_t)(void);
@@ -321,9 +322,15 @@ asmlinkage long my_sys_execve(struct pt_regs *regs)
     int p_result = 0;
     int check_ret = PRM_ERROR;
 
+    char filename[4096];
+
     uid = current_uid().val;
     printk("execve: %u: \n", uid);
-    printk("%s\n", (char *)(regs->di));
+
+    copy_from_user(filename, (char *)(regs->di), 4096);
+    printk("%s\n", filename);
+
+    copy_from_user();
 
     p_result = CHECK_RESULT_PASS;
 
