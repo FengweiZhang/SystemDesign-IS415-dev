@@ -130,6 +130,7 @@ sys_call_t real_read;
 sys_call_t real_write;
 sys_call_t real_reboot;
 sys_call_t real_socket;
+sys_call_t real_execve;
 
 
 /**
@@ -254,7 +255,7 @@ asmlinkage long my_sys_reboot(struct pt_regs * regs)
             p_result = CHECK_RESULT_PASS;
         }
         // 若成功查询，结果已经放入了p_result中
-        
+
         // debug 先设置为都通过
         p_result = CHECK_RESULT_PASS;
     }
@@ -300,6 +301,32 @@ asmlinkage long my_sys_socket(struct pt_regs *regs)
     if(p_result != CHECK_RESULT_NOTPASS)
     {
         ret = real_socket(regs);
+    }
+    return ret;
+}
+
+/**
+ * @brief 对sys_execve进行hook
+ * asmlinkage long sys_execve(const char __user *filename,
+		const char __user *const __user *argv,
+		const char __user *const __user *envp);
+ * 
+ * @param regs 
+ * @return asmlinkage 
+ */
+asmlinkage long sys_execve(struct pt_regs *regs)
+{
+    long ret = -1;
+    uid_t uid;
+    int p_result = 0;
+    int check_ret = PRM_ERROR;
+
+    uid = current_uid().val;
+    printk("execve: %u: %s\n", uid, (char *)(regs->di));
+
+    if(p_result != CHECK_RESULT_NOTPASS)
+    {
+        ret = real_execve(regs);
     }
     return ret;
 }
