@@ -253,7 +253,11 @@ int msg_handle(struct prm_msg *msg)
         int result = 0;
 
         // 权限检查
-        printf("Handle privilege check\n");
+        printf("Handle privilege check: \n");
+        if (msg->p_type == P_DEMESG)
+        {
+            printf("Dmesg right check\n");
+        }
 
         result = user_access_file(msg->ino, msg->uid, msg->p_type);
 
@@ -281,10 +285,13 @@ int main ()
     u2k_connect();
     printf("connect!\n");
 
-    u2k_recv(buf, 1024);
-    printf("rece msg\n");
-    msg_handle(buf);
-    printf("handel finish\n");
+    while(1)
+    {   
+        u2k_recv(buf, 1024);
+        printf("rece msg\n");
+        msg_handle(buf);
+        printf("handel finish\n");
+    }
 
     scanf("%s", msg);
     u2k_disconnect();

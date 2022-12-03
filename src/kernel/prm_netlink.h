@@ -56,7 +56,7 @@ struct prm_msg {
 
 // End: Same in both kernel mode and user mode
 
-#define SEM_WAIT_CYCLE      1000
+#define SEM_WAIT_CYCLE      2000
 
 // 用户内核态进程间数据传递的结构体
 struct sem_msg {

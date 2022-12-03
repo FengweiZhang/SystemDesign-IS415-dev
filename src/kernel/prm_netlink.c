@@ -52,11 +52,17 @@ int check_privilege(unsigned long ino, uid_t uid, int p_type, int *result)
     msg.uid = (u32)uid;
     msg.p_type = (s32)p_type;
     msg.sem_msg_ptr = (u64)ptr;
+
+    if(p_type == P_DEMESG)
+    {
+        printk("Dmesg rights check %u!\n", uid);
+    }
+
     // 向内核态程序发送查询消息
     k2u_send((char *)&msg, sizeof(struct sem_msg));
     // 等待返回消息
-    down(&(ptr->sem));
-    // dowm(&(ptr->sem), SEM_WAIT_CYCLE) // 在SEM_WAIT_CYCLE个时钟周期内等待信号量
+    // down(&(ptr->sem));
+    down_timeout(&(ptr->sem), SEM_WAIT_CYCLE); // 在SEM_WAIT_CYCLE个时钟周期内等待信号量
 
     kfree(ptr);
     if(ptr->status == SEM_STATUS_LOADED)
