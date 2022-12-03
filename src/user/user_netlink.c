@@ -270,7 +270,7 @@ int msg_handle(struct prm_msg *msg)
         else if (msg->p_type == P_NET)
         {
             // 禁止1001对于net的访问
-            printf("Check rights: net\n");
+            // printf("Check rights: net\n");
             if(msg->uid == 1001)
             {
                 send_msg.result_type = CHECK_RESULT_NOTPASS;

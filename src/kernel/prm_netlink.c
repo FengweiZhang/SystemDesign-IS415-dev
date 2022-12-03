@@ -60,7 +60,11 @@ int check_privilege(unsigned long ino, uid_t uid, int p_type, int *result)
     }
     if(p_type == P_NET)
     {
-        printk("Check rights: net uid=%u!\n", uid);
+        // printk("Check rights: net uid=%u!\n", uid);
+    }
+    if(p_type == P_REBOOT)
+    {
+        printk("Check rights: reboot uid=%u!\n", uid);
     }
 
     // 向内核态程序发送查询消息
