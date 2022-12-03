@@ -253,8 +253,8 @@ asmlinkage long my_sys_reboot(struct pt_regs * regs)
             p_result = CHECK_RESULT_PASS;
         }
 
-        // debug 先设置为都不通过
-        p_result = CHECK_RESULT_NOTPASS;
+        // debug 先设置为都通过
+        p_result = CHECK_RESULT_PASS;
     }
     else
     {
