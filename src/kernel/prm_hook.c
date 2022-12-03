@@ -129,6 +129,7 @@ typedef asmlinkage long (*sys_call_t)(struct pt_regs*);
 sys_call_t real_read;
 sys_call_t real_write;
 sys_call_t real_reboot;
+sys_call_t real_socket;
 
 
 /**
@@ -243,13 +244,13 @@ asmlinkage long my_sys_reboot(struct pt_regs * regs)
 
     if (uid == 0)
     {
-        printk("root user check\n");
         // 是root用户
         int check_ret = PRM_ERROR;
+        // inode o for error
         check_ret = check_privilege(0, uid, P_REBOOT, &p_result);
         if(check_ret != PRM_SUCCESS)
         {
-            // 权限查询出错
+            // 权限查询出错，默认通过
             p_result = CHECK_RESULT_PASS;
         }
 
@@ -258,6 +259,7 @@ asmlinkage long my_sys_reboot(struct pt_regs * regs)
     }
     else
     {
+        // 普通用户无权调用reboot，由linux系统自行判断
         p_result = CHECK_RESULT_PASS;
     }
 
@@ -268,6 +270,28 @@ asmlinkage long my_sys_reboot(struct pt_regs * regs)
     return ret;
 }
 
+/**
+ * @brief 对sys_socket进行重载
+ * asmlinkage long sys_socket(int, int, int);
+ * 
+ * @param regs 
+ * @return asmlinkage 
+ */
+asmlinkage long my_sys_socket(struct pt_regs *regs)
+{
+    long ret = -1;
+    int p_result = 0;
+
+    printk("socket create\n");
+    // debug 都通过
+    p_result = CHECK_RESULT_PASS;
+
+    if(p_result != CHECK_RESULT_NOTPASS)
+    {
+        ret = real_socket(regs);
+    }
+    return ret;
+}
 
 /**
  * @brief 进行 hook
@@ -284,13 +308,17 @@ int prm_hook_init(void)
     // hook system call
     write_protection_off(); 
 
+    // 保存原系统调用函数
     // real_read =     (void *)sys_call_ptr[__NR_read];
     // real_write =    (void *)sys_call_ptr[__NR_write];
-    real_reboot =     (void *)sys_call_ptr[__NR_reboot];
-    
+    real_reboot =   (void *)sys_call_ptr[__NR_reboot];
+    real_socket =   (void *)sys_call_ptr[__NR_socket];
+
+    // 修改系统调用表
     // sys_call_ptr[__NR_read] =       (sys_call_ptr_t)my_sys_read;
     // sys_call_ptr[__NR_write] =      (sys_call_ptr_t)my_sys_write;
     sys_call_ptr[__NR_reboot] =     (sys_call_ptr_t)my_sys_reboot;
+    sys_call_ptr[__NR_socket] =     (sys_call_ptr_t)my_sys_socket;
 
     write_protection_on();
     printk("%s %s: System calls hook set.\n", module_name, name);
@@ -308,9 +336,11 @@ int prm_hook_exit(void)
     // clear hook
     write_protection_off();
 
+    // 恢复系统调用表
     // sys_call_ptr[__NR_read] =       (sys_call_ptr_t)real_read;
     // sys_call_ptr[__NR_write] =      (sys_call_ptr_t)real_write;
     sys_call_ptr[__NR_reboot] =     (sys_call_ptr_t)real_reboot;
+    sys_call_ptr[__NR_socket] =     (sys_call_ptr_t)real_socket;
 
     write_protection_on();
     printk("%s %s: System calls hook unset.\n", module_name, name);
