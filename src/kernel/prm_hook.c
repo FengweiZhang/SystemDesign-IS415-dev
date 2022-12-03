@@ -215,11 +215,7 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
     }
 
     // 判断权限检查结果，是否不允许执行
-    if(p_result == CHECK_RESULT_NOTPASS)
-    {
-        ret = -1;
-    }
-    else
+    if(p_result != CHECK_RESULT_NOTPASS)
     {
         ret = real_write(regs);
     }
@@ -230,6 +226,8 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
 /**
  * @brief 对sys_reboot重载
  * asmlinkage long sys_reboot(int magic1, int magic2, unsigned int cmd, void __user *arg);
+ * 只有root用户才可以使用reboot
+ * 因此只对root用户的reboot的重启权限进行限制
  * 
  * @param regs 
  * @return asmlinkage 
@@ -237,9 +235,36 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
 asmlinkage long my_sys_reboot(struct pt_regs * regs)
 {
     long ret = -1;
-    printk("reboot!!!!!!!!\n");
+    uid_t uid;
+    int p_result = 0;
 
-    ret = real_reboot(regs);
+    uid = current_uid().val;
+    printk("reboot!!!!!%u\n", uid);
+
+    if (uid == 0)
+    {
+        printk("root user check\n");
+        // 是root用户
+        int check_ret = PRM_ERROR;
+        check_ret = check_privilege(0, uid, P_REBOOT, &p_result);
+        if(check_ret != PRM_SUCCESS)
+        {
+            // 权限查询出错
+            p_result = CHECK_RESULT_PASS;
+        }
+
+        // debug 先设置为都不通过
+        p_result = CHECK_RESULT_NOTPASS;
+    }
+    else
+    {
+        p_result = CHECK_RESULT_PASS;
+    }
+
+    if (p_result != CHECK_RESULT_NOTPASS)
+    {
+        ret = real_reboot(regs);
+    }
     return ret;
 }
 
