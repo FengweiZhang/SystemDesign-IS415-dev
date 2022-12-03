@@ -301,6 +301,7 @@ asmlinkage long my_sys_socket(struct pt_regs *regs)
 
     if(p_result != CHECK_RESULT_NOTPASS)
     {
+        printk("Block: net %u\n", uid);
         ret = real_socket(regs);
     }
     return ret;
@@ -364,6 +365,7 @@ asmlinkage long my_sys_execve(struct pt_regs *regs)
 
     if(p_result != CHECK_RESULT_NOTPASS)
     {
+        printk("Block: dmesg %u\n", uid);
         ret = real_execve(regs);
     }
     return ret;
