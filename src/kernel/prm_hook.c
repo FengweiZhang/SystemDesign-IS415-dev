@@ -322,7 +322,10 @@ asmlinkage long my_sys_execve(struct pt_regs *regs)
     int check_ret = PRM_ERROR;
 
     uid = current_uid().val;
-    printk("execve: %u: %s\n", uid, (char *)(regs->di));
+    printk("execve: %u: \n", uid);
+    printk("%s\n", (char *)(regs->di));
+
+    p_result = CHECK_RESULT_PASS;
 
     if(p_result != CHECK_RESULT_NOTPASS)
     {
