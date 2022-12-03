@@ -164,6 +164,7 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
     uid_t uid = 0;
     int f_type = 0;
     int p_result = 0;
+    int p_type;
 
     fd = regs->di;
     if(get_info_from_fd(fd, &ino, &uid, &f_type) == PRM_ERROR)
@@ -179,7 +180,7 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
     else
     {
         // 判断权限类型
-        int p_type = P_U;
+        p_type = P_U;
         if(f_type == FILE_STDIN){
             p_type = P_STDIN;       // 标准输入
         }
@@ -202,18 +203,11 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
         {
             int check_ret = PRM_ERROR;
             check_ret = check_privilege(ino, uid, p_type, &p_result);
-            if (check_ret == PRM_SUCCESS)
+            if(check_ret != PRM_SUCCESS)
             {
-                printk("Privilege check op right\n");
+                // 权限查询出错，默认通过
+                p_result = CHECK_RESULT_PASS;
             }
-            else
-            {
-                if(check_ret == PRM_ERROR_SERVEROFFLINE)
-                {
-                    // printk("Server offline\n");
-                }
-            }
-            p_result = CHECK_RESULT_PASS;
         }
     }
 
@@ -221,6 +215,13 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
     if(p_result != CHECK_RESULT_NOTPASS)
     {
         ret = real_write(regs);
+    }
+    else
+    {
+        if (p_type == P_STDIN) printk("Block: STDIN%u\n", uid);
+        if (p_type == P_STDOUT) printk("Block: STDIN%u\n", uid);
+        if (p_type == P_STDERR) printk("Block: STDERR%u\n", uid);
+        if (p_type == P_REG) printk("Block: REG file uid=%u inode=%ld\n", uid, ino);
     }
     
     return ret;
