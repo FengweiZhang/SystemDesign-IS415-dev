@@ -85,5 +85,6 @@ int main ()
         get_page (s, host, "");
     }
     freeaddrinfo (res0);
+	printf("\n");
     return 0;
 }
