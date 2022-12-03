@@ -136,7 +136,7 @@ int u2k_send(char *buf, size_t len)
     printf("%08x\n", ptr->uid);
     printf("%d\n", ptr->p_type);
     printf("%d\n", ptr->result_type);
-    printf("%016x\n", ptr->sem_msg_ptr);
+    printf("%016lx\n", ptr->sem_msg_ptr);
     
 
     ssize_t send_len = sendto(netlink_socket, msg, msg->nlh.nlmsg_len, 0, (struct sockaddr *)kernel_addr, sizeof(struct sockaddr_nl));
