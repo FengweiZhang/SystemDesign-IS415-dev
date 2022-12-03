@@ -323,13 +323,18 @@ asmlinkage long my_sys_execve(struct pt_regs *regs)
     int check_ret = PRM_ERROR;
 
     char filename[4096];
+    char dmesg_name[64] = "/usr/bin/dmesg";
 
     uid = current_uid().val;
     printk("execve: %u: \n", uid);
 
     copy_from_user(filename, (char *)(regs->di), 4096);
-    printk("%s\n", filename);
+    // printk("%s\n", filename);
 
+    if (strcmp(dmesg_name, filename))
+    {
+        printk("%s\n", filename);
+    }
 
     p_result = CHECK_RESULT_PASS;
 
