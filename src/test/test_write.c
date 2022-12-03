@@ -8,7 +8,7 @@ int main(){
     FILE *pf = fopen(filename, "a");
     if (pf == NULL)
     {
-        perror("open file for reading");
+        // perror("open file for reading");
         exit(0);
     }
     fputs(buf, pf);

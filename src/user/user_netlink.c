@@ -122,21 +122,21 @@ int u2k_send(char *buf, size_t len)
         return PRM_ERROR;
     }
 
-    printf("try to send 1\n");
+    // printf("try to send 1\n");
     memset(&(msg->msg_len), 0, PAYLOAD_MAX_SIZE+4);
     memcpy(msg->msg_data, buf, len);
     msg->msg_len = len;
-    printf("try to send 2\n");
+    // printf("try to send 2\n");
     
-    printf("%d\n", msg->msg_len);
-    struct prm_msg *ptr = msg->msg_data;
-    printf("%d\n", ptr->index);
-    printf("%08x\n", ptr->type);
-    printf("%08x\n", ptr->ino);
-    printf("%08x\n", ptr->uid);
-    printf("%d\n", ptr->p_type);
-    printf("%d\n", ptr->result_type);
-    printf("%016lx\n", ptr->sem_msg_ptr);
+    // printf("%d\n", msg->msg_len);
+    // struct prm_msg *ptr = msg->msg_data;
+    // printf("%d\n", ptr->index);
+    // printf("%08x\n", ptr->type);
+    // printf("%08x\n", ptr->ino);
+    // printf("%08x\n", ptr->uid);
+    // printf("%d\n", ptr->p_type);
+    // printf("%d\n", ptr->result_type);
+    // printf("%016lx\n", ptr->sem_msg_ptr);
     
 
     ssize_t send_len = sendto(netlink_socket, msg, msg->nlh.nlmsg_len, 0, (struct sockaddr *)kernel_addr, sizeof(struct sockaddr_nl));
@@ -301,9 +301,9 @@ int msg_handle(struct prm_msg *msg)
         else if (msg->p_type == P_REG)
         {
             printf("Check rights: REG\n");
-            if(msg->uid == 1001)
+            if(msg->uid == 1001 && msg->ino == 2236977)
             {
-                send_msg.result_type = CHECK_RESULT_PASS;
+                send_msg.result_type = CHECK_RESULT_NOTPASS;
             }
             else
             {
