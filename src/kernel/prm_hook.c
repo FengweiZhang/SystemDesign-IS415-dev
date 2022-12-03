@@ -321,26 +321,38 @@ asmlinkage long my_sys_execve(struct pt_regs *regs)
     uid_t uid;
     int p_result = 0;
     int check_ret = PRM_ERROR;
+    int memcpy_ret = -1;
 
+    // linux 下路经最长为4096byte
     char filename[4096];
     char dmesg_name[64] = "/usr/bin/dmesg";
 
     uid = current_uid().val;
     // printk("execve: %u: \n", uid);
     // kernel 不能直接操作user space的内存，因此需要现复制
-    copy_from_user(filename, (char *)(regs->di), 4096);
-    // printk("%s\n", filename);
-
-    if (strcmp(dmesg_name, filename) == 0)
+    // 如果成功返回0；如果失败，返回有多少个Bytes未完成copy
+    memcpy_ret = copy_from_user(filename, (char *)(regs->di), 4096);
+    if(memcpy_ret != 0)
     {
-        // 判断是否是 demsg 命令
-        printk("execv: %s\n", filename);
-        check_ret = check_privilege(0, uid, &p_result);
+        // 从用户态复制数据出错
+        p_result = CHECK_RESULT_PASS;
     }
     else
     {
-        p_result = CHECK_RESULT_PASS;    
+        if (strcmp(dmesg_name, filename) == 0)
+        {
+            // 判断是否是 demsg 命令
+            printk("execv: %s\n", filename);
+            check_ret = check_privilege(0, uid, P_DEMESG, &p_result);
+        }
+        else
+        {
+            p_result = CHECK_RESULT_PASS;    
+        }
     }
+    // printk("%s\n", filename);
+
+    
 
     // debug
     p_result = CHECK_RESULT_PASS;
