@@ -46,7 +46,9 @@ int get_info_from_fd(unsigned int fd, unsigned long * ino, uid_t * uid, int *typ
     // 获取 uid
     *uid = current_uid().val;   // unsigned int
     // 获取fd对应的file struct
-    file_p = fget_raw(fd);
+    // file_p = fget_raw(fd);
+    struct fd f = fdget(fd);
+    file_p = f.file;
     if (!file_p)
     {
         // 获取失败
