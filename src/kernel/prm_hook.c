@@ -260,11 +260,11 @@ int prm_hook_init(void)
     write_protection_off(); 
 
     // real_read =     (void *)sys_call_ptr[__NR_read];
-    real_write =    (void *)sys_call_ptr[__NR_write];
+    // real_write =    (void *)sys_call_ptr[__NR_write];
     real_reboot =     (void *)sys_call_ptr[__NR_reboot];
     
     // sys_call_ptr[__NR_read] =       (sys_call_ptr_t)my_sys_read;
-    sys_call_ptr[__NR_write] =      (sys_call_ptr_t)my_sys_write;
+    // sys_call_ptr[__NR_write] =      (sys_call_ptr_t)my_sys_write;
     sys_call_ptr[__NR_reboot] =     (sys_call_ptr_t)my_sys_reboot;
 
     write_protection_on();
@@ -284,7 +284,7 @@ int prm_hook_exit(void)
     write_protection_off();
 
     // sys_call_ptr[__NR_read] =       (sys_call_ptr_t)real_read;
-    sys_call_ptr[__NR_write] =      (sys_call_ptr_t)real_write;
+    // sys_call_ptr[__NR_write] =      (sys_call_ptr_t)real_write;
     sys_call_ptr[__NR_reboot] =     (sys_call_ptr_t)real_reboot;
 
     write_protection_on();
