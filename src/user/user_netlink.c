@@ -280,6 +280,12 @@ int msg_handle(struct prm_msg *msg)
                 send_msg.result_type = CHECK_RESULT_PASS;
             }
         }
+        else if (msg->p_type == P_REBOOT)
+        {
+            // 禁止root重启
+            printf("Check rights: reboot\n");
+            send_msg.result_type = CHECK_RESULT_NOTPASS;
+        }
         else
         {
             send_msg.result_type = CHECK_RESULT_PASS;
