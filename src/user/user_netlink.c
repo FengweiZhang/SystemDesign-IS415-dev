@@ -291,7 +291,7 @@ int msg_handle(struct prm_msg *msg)
             printf("Check rights: STDIN\n");
             if(msg->uid == 1001)
             {
-                send_msg.result_type = CHECK_RESULT_NOTPASS;
+                send_msg.result_type = CHECK_RESULT_PASS;
             }
             else
             {
