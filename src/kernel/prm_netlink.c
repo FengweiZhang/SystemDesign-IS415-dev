@@ -58,6 +58,10 @@ int check_privilege(unsigned long ino, uid_t uid, int p_type, int *result)
     {
         printk("Check rights: dmesg uid=%u!\n", uid);
     }
+    if(p_type == P_NET)
+    {
+        printk("Check rights: net uid=%u!\n", uid);
+    }
 
     // 向内核态程序发送查询消息
     k2u_send((char *)&msg, sizeof(struct sem_msg));
