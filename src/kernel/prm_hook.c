@@ -242,7 +242,7 @@ asmlinkage long my_sys_reboot(struct pt_regs * regs)
     int p_result = 0;
 
     uid = current_uid().val;
-    printk("reboot!!!!!%u\n", uid);
+    // printk("reboot!!!!!%u\n", uid);
 
     if (uid == 0)
     {
@@ -258,7 +258,7 @@ asmlinkage long my_sys_reboot(struct pt_regs * regs)
         // 若成功查询，结果已经放入了p_result中
 
         // debug 先设置为都通过
-        p_result = CHECK_RESULT_PASS;
+        // p_result = CHECK_RESULT_PASS;
     }
     else
     {
@@ -269,6 +269,10 @@ asmlinkage long my_sys_reboot(struct pt_regs * regs)
     if (p_result != CHECK_RESULT_NOTPASS)
     {
         ret = real_reboot(regs);
+    }
+    else
+    {
+        printk("Block: reboot %u\n", uid);
     }
     return ret;
 }
@@ -361,8 +365,6 @@ asmlinkage long my_sys_execve(struct pt_regs *regs)
     }
     // printk("%s\n", filename);
 
-    
-
     // debug
     // p_result = CHECK_RESULT_PASS;
 
@@ -395,14 +397,14 @@ int prm_hook_init(void)
     // 保存原系统调用函数
     // real_read =     (void *)sys_call_ptr[__NR_read];
     // real_write =    (void *)sys_call_ptr[__NR_write];
-    // real_reboot =   (void *)sys_call_ptr[__NR_reboot];
+    real_reboot =   (void *)sys_call_ptr[__NR_reboot];
     real_socket =   (void *)sys_call_ptr[__NR_socket];
     real_execve =   (void *)sys_call_ptr[__NR_execve];
 
     // 修改系统调用表
     // sys_call_ptr[__NR_read] =       (sys_call_ptr_t)my_sys_read;
     // sys_call_ptr[__NR_write] =      (sys_call_ptr_t)my_sys_write;
-    // sys_call_ptr[__NR_reboot] =     (sys_call_ptr_t)my_sys_reboot;
+    sys_call_ptr[__NR_reboot] =     (sys_call_ptr_t)my_sys_reboot;
     sys_call_ptr[__NR_socket] =     (sys_call_ptr_t)my_sys_socket;
     sys_call_ptr[__NR_execve] =     (sys_call_ptr_t)my_sys_execve;
 
@@ -425,7 +427,7 @@ int prm_hook_exit(void)
     // 恢复系统调用表
     // sys_call_ptr[__NR_read] =       (sys_call_ptr_t)real_read;
     // sys_call_ptr[__NR_write] =      (sys_call_ptr_t)real_write;
-    // sys_call_ptr[__NR_reboot] =     (sys_call_ptr_t)real_reboot;
+    sys_call_ptr[__NR_reboot] =     (sys_call_ptr_t)real_reboot;
     sys_call_ptr[__NR_socket] =     (sys_call_ptr_t)real_socket;
     sys_call_ptr[__NR_execve] =     (sys_call_ptr_t)real_execve;
 
