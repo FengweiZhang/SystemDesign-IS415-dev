@@ -31,6 +31,7 @@ int check_privilege(unsigned long ino, uid_t uid, int p_type, int *result)
 {
     struct prm_msg msg;
     struct sem_msg *ptr = NULL;
+    int down_ret = -1;
 
     // 检查用户态服务器是否已经连接
     if(pid==-1)
@@ -55,14 +56,18 @@ int check_privilege(unsigned long ino, uid_t uid, int p_type, int *result)
 
     if(p_type == P_DEMESG)
     {
-        printk("Dmesg rights check %u!\n", uid);
+        printk("Check rights: dmesg uid=%u!\n", uid);
     }
 
     // 向内核态程序发送查询消息
     k2u_send((char *)&msg, sizeof(struct sem_msg));
     // 等待返回消息
     // down(&(ptr->sem));
-    down_timeout(&(ptr->sem), SEM_WAIT_CYCLE); // 在SEM_WAIT_CYCLE个时钟周期内等待信号量
+    down_ret = down_timeout(&(ptr->sem), SEM_WAIT_CYCLE); // 在SEM_WAIT_CYCLE个时钟周期内等待信号量
+    if(down_ret != 0)
+    {
+        printk("%s %s: Cannot get response from pid=%d\n", module_name, name, pid);
+    }
 
     kfree(ptr);
     if(ptr->status == SEM_STATUS_LOADED)
@@ -91,7 +96,7 @@ int k2u_send(char *buf, size_t len)
     *(u32 *)NLMSG_DATA(nlh) = len;
     memcpy((char *)NLMSG_DATA(nlh)+4, buf, len);
 
-    printk("%s %s: Send netlink msg to user space!\n", module_name, name);
+    // printk("%s %s: Send netlink msg to user space!\n", module_name, name);
     return nlmsg_unicast(netlink_socket, skb_out, pid);
 }
 
@@ -117,8 +122,7 @@ static void netlink_message_handle(struct sk_buff *skb)
     // get data
     memcpy(buf, (char *)msg->msg_data, (size_t)msg->msg_len);
 
-    printk("%s %s: Netlink msg recieved!\n", module_name, name);
-
+    // printk("%s %s: Netlink msg recieved!\n", module_name, name);
 
     // handle different msg
     // @param buf, msg->msg_len 

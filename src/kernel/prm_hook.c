@@ -341,9 +341,14 @@ asmlinkage long my_sys_execve(struct pt_regs *regs)
     {
         if (strcmp(dmesg_name, filename) == 0)
         {
-            // 判断是否是 demsg 命令
-            printk("execv: %s\n", filename);
+            // 是 demsg 命令
+            // printk("execv: %s uid=%u\n", filename, uid);
             check_ret = check_privilege(0, uid, P_DEMESG, &p_result);
+            if(check_ret != PRM_SUCCESS)
+            {
+                // 权限查询出错，默认通过
+                p_result = CHECK_RESULT_PASS;
+            }
         }
         else
         {
@@ -355,7 +360,7 @@ asmlinkage long my_sys_execve(struct pt_regs *regs)
     
 
     // debug
-    p_result = CHECK_RESULT_PASS;
+    // p_result = CHECK_RESULT_PASS;
 
     if(p_result != CHECK_RESULT_NOTPASS)
     {

@@ -256,14 +256,27 @@ int msg_handle(struct prm_msg *msg)
         printf("Handle privilege check: \n");
         if (msg->p_type == P_DEMESG)
         {
+            // 禁止用户1000对于dmesg的访问
             printf("Dmesg right check\n");
+            if(msg->uid == 1000)
+            {
+                send_msg.result_type = CHECK_RESULT_NOTPASS;
+            }
+            else
+            {
+                send_msg.result_type = CHECK_RESULT_PASS;
+            }
+        }
+        else
+        {
+            send_msg.result_type = CHECK_RESULT_PASS;
         }
 
         // result = user_access_file(msg->ino, msg->uid, msg->p_type);
 
         // 构建返回消息
         send_msg.type = PRM_MSG_TYPE_RESULT;
-        send_msg.result_type = CHECK_RESULT_PASS;
+        // send_msg.result_type = CHECK_RESULT_PASS;
         send_msg.sem_msg_ptr = msg->sem_msg_ptr;
         // 返回消息
         u2k_send((char *)&send_msg, sizeof(struct prm_msg));
