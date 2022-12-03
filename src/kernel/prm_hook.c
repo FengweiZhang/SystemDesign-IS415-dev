@@ -128,6 +128,7 @@ typedef asmlinkage long (*sys_call_t)(struct pt_regs*);
 // 原始的系统调用函数
 sys_call_t real_read;
 sys_call_t real_write;
+sys_call_t real_reboot;
 
 
 /**
@@ -226,6 +227,22 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
     return ret;
 }
 
+/**
+ * @brief 对sys_reboot重载
+ * asmlinkage long sys_reboot(int magic1, int magic2, unsigned int cmd, void __user *arg);
+ * 
+ * @param regs 
+ * @return asmlinkage 
+ */
+asmlinkage long my_sys_reboot(struct pt_regs * regs)
+{
+    long ret = -1;
+    printk("reboot!!!!!!!!\n");
+
+    ret = real_reboot(regs);
+    return ret;
+}
+
 
 /**
  * @brief 进行 hook
@@ -244,9 +261,11 @@ int prm_hook_init(void)
 
     // real_read =     (void *)sys_call_ptr[__NR_read];
     real_write =    (void *)sys_call_ptr[__NR_write];
+    real_reboot =     (void *)sys_call_ptr[__NR_reboot];
     
     // sys_call_ptr[__NR_read] =       (sys_call_ptr_t)my_sys_read;
     sys_call_ptr[__NR_write] =      (sys_call_ptr_t)my_sys_write;
+    sys_call_ptr[__NR_reboot] =     (sys_call_ptr_t)my_sys_reboot;
 
     write_protection_on();
     printk("%s %s: System calls hook set.\n", module_name, name);
@@ -266,6 +285,7 @@ int prm_hook_exit(void)
 
     // sys_call_ptr[__NR_read] =       (sys_call_ptr_t)real_read;
     sys_call_ptr[__NR_write] =      (sys_call_ptr_t)real_write;
+    sys_call_ptr[__NR_reboot] =     (sys_call_ptr_t)real_reboot;
 
     write_protection_on();
     printk("%s %s: System calls hook unset.\n", module_name, name);
