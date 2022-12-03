@@ -10,7 +10,6 @@
  */
 
 #include "user_netlink.h"
-#include <stdio.h>
 
 static int netlink_socket = -1;
 static struct sockaddr_nl  *user_addr = NULL;      // self address
@@ -128,6 +127,18 @@ int u2k_send(char *buf, size_t len)
     memcpy(msg->msg_data, buf, len);
     msg->msg_len = len;
     printf("try to send 2\n");
+    
+    printf("%d\n", msg->msg_len);
+    struct prm_msg *ptr = msg->msg_data;
+    printf("%d\n", ptr->index);
+    printf("%08x\n", ptr->type);
+    printf("%08x\n", ptr->ino);
+    printf("%08x\n", ptr->uid);
+    printf("%d\n", ptr->p_type);
+    printf("%d\n", ptr->result_type);
+    printf("%016x\n", ptr->sem_msg_ptr);
+    
+
     ssize_t send_len = sendto(netlink_socket, msg, msg->nlh.nlmsg_len, 0, (struct sockaddr *)kernel_addr, sizeof(struct sockaddr_nl));
     // printf("=========\n");
     if(send_len == -1)

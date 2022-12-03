@@ -190,10 +190,10 @@ static void netlink_message_handle(struct sk_buff *skb)
     {
         // 出现了未知的消息类型
         printk("Unknown message type\n");
-        printk("%08x\n", *(((u32 *)ptr)+0));
-        printk("%08x\n", *(((u32 *)ptr)+1));
-        printk("%08x\n", *(((u32 *)ptr)+2));
-        printk("%016llx\n", *(u64 *)(((u32 *)ptr)+3));        
+        // printk("%08x\n", *(((u32 *)ptr)+0));
+        // printk("%08x\n", *(((u32 *)ptr)+1));
+        // printk("%08x\n", *(((u32 *)ptr)+2));
+        // printk("%016llx\n", *(u64 *)(((u32 *)ptr)+3));        
     }
 
 
