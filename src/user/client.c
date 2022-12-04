@@ -163,19 +163,41 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid, unsigned cha
         break;
     }
 
-    if (op == GET_USER_LEVEL)
+    if (op == GET_USER_LEVEL || rspbuf.stat == OP_SUCCESS)
     {
-        printf("get user level : %d\n", rspbuf.level);
-        logwrite(info, "get user level : %d", rspbuf.level);
+        printf("get user %s level : %d\n", username, rspbuf.level);
+        logwrite(info, "get user %s level : %d\n", username, rspbuf.level);
     }
 
-    if (op == GET_FILE_LEVEL)
+    if (op == GET_FILE_LEVEL || rspbuf.stat == OP_SUCCESS)
     {
-        printf("get file level : %d\n", rspbuf.level);
-        logwrite(info, "get file level : %d", rspbuf.level);
+        printf("get file %s level : %d\n", filepath, rspbuf.level);
+        logwrite(info, "get file %s level : %d\n", filepath, rspbuf.level);
+    }
+    if (op == SET_USER_LEVEL || rspbuf.stat == OP_SUCCESS)
+    {
+        printf("set user %s level : %d\n", username, level);
+        logwrite(info, "set user %s level : %d\n", username, level);
     }
 
-    if (op == GET_USER_TO_OTHER_LEVEL)
+    if (op == SET_FILE_LEVEL || rspbuf.stat == OP_SUCCESS)
+    {
+        printf("set file %s level : %d\n", filepath, level);
+        logwrite(info, "set file %s level : %d\n", filepath, level);
+    }
+    if (op == DELETE_USER_LEVEL || rspbuf.stat == OP_SUCCESS)
+    {
+        printf("delete user %s level\n", username);
+        logwrite(info, "delete user %s level\n", username);
+    }
+
+    if (op == DELETE_FILE_LEVEL || rspbuf.stat == OP_SUCCESS)
+    {
+        printf("delete file %s leveld\n", filepath);
+        logwrite(info, "delete file %s leveld\n", filepath);
+    }
+
+    if (op == GET_USER_TO_OTHER_LEVEL || rspbuf.stat == OP_SUCCESS)
     {
         printf("get user to other level : %d\n , symbol of other file:%lu\n", rspbuf.level, reqbuf.ino);
         if (rspbuf.level > 0)
@@ -187,8 +209,21 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid, unsigned cha
             printf("You don't have permission!");
         }
 
-        printf("all symbol:1 stdin,2 stdout,3 stderr,5 root,6 net,7 log\n");
+        printf("all symbol:5 root,6 net,7 log\n");
         logwrite(info, "get user to other file level : %d", rspbuf.level);
+    }
+    if (op == SET_USER_TO_OTHER_LEVEL || rspbuf.stat == OP_SUCCESS)
+    {
+        printf("set user to other level : %d\n , symbol of other file:%lu\n", level, reqbuf.ino);
+        printf("all symbol:5 root,6 net,7 log\n");
+        logwrite(info, "set user to other file level : %d", level);
+    }
+    if (op == DELETE_USER_TO_OTHER_LEVEL || rspbuf.stat == OP_SUCCESS)
+    {
+        printf("delete user to other level , symbol of other file:%lu\n", reqbuf.ino);
+
+        printf("all symbol:5 root,6 net,7 log\n");
+        logwrite(info, "delete user to other level , symbol of other file:%lu\n", reqbuf.ino);
     }
 
     // 关闭socket 删除文件
@@ -209,7 +244,7 @@ void usage(void)
                    "  -d (delete)	delete level\n"
                    "  -u (user)	input user name for operation\n"
                    "  -f (file)	input file path for operation or other\n"
-                   "  other for -f: 1 stdin,2 stdout,3 stderr,5 root,6 net,7 log\n");
+                   "  other for -f: 5 root,6 net,7 log\n");
 }
 
 /**
@@ -330,9 +365,10 @@ int main(int argc, char **argv)
     {
         inode = filepath[0] - '0';
         printf("inode: %lu,option:%d\n", inode, option);
-        if (inode < 1 || inode > 7 || inode == 4)
+        if (inode < 5 || inode > 7)
         {
             usage();
+            return 0;
         }
     }
 
