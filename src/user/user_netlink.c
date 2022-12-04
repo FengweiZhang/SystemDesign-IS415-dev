@@ -319,23 +319,15 @@ int msg_handle(struct prm_msg *msg, sqlite3 *db)
             printf("Check rights: REG %u, %d\n", msg->uid, msg->ino);
             result = user_access_file(db, msg->ino, msg->uid, msg->p_type);
             printf("查询结果%d\n", result);
-            // if (result == 1)
-            // {
-            //     // 1 代表没通过
-            //     send_msg.result_type = CHECK_RESULT_NOTPASS;
-            // }
-            // else
-            // {
-            //     send_msg.result_type = CHECK_RESULT_PASS;
-            // }
-            if(msg->uid == 1001 && msg->ino == 2236977)
+            if (result == 1)
             {
+                // 1 代表没通过
                 send_msg.result_type = CHECK_RESULT_NOTPASS;
             }
             else
             {
                 send_msg.result_type = CHECK_RESULT_PASS;
-            }    
+            }
         }
         // else if (msg->p_type == P_STDIN)
         // {
