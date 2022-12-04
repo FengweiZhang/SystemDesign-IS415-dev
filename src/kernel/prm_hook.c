@@ -10,6 +10,7 @@
 #include <asm/unistd_64.h>
 #include <asm/ptrace.h>
 #include <asm/uaccess.h>
+#include <linux/fs.h>
 
 // define a function pointer 
 typedef void (* sys_call_ptr_t)(void);
@@ -27,6 +28,7 @@ static struct kprobe kp = {
     // .symbol_name = "kallsyms_lookup_name"
     .symbol_name = "sys_call_table"
 };
+
 
 /**
  * @brief 从文件描述符获取文件的信息
@@ -129,12 +131,50 @@ typedef asmlinkage long (*sys_call_t)(struct pt_regs*);
 
 
 // 原始的系统调用函数
+sys_call_t real_openat;
 sys_call_t real_read;
 sys_call_t real_write;
 sys_call_t real_reboot;
 sys_call_t real_socket;
 sys_call_t real_execve;
 
+
+/**
+ * @brief 对sys_openat进行重载
+ * asmlinkage long sys_openat(int dfd, const char __user *filename, int flags, umode_t mode);
+ * 
+ * @param regs 
+ * @return asmlinkage 
+ */
+asmlinkage long my_sys_openat(struct pt_regs *regs)
+{
+    long ret =  real_openat(regs);
+
+    // unsigned int fd = 0;
+    unsigned long ino = 0;
+    uid_t uid = 0;
+    int f_type = 0;
+    int p_result = 0;
+    int p_type;
+
+    if (ret == -1)
+    {
+        return ret;
+    }
+    else
+    {
+        if(get_info_from_fd(ret, &ino, &uid, &f_type) == PRM_ERROR)
+        {
+            printk("Error fd\n");
+        }
+        else
+        {
+            printk("inode:%ld\n", ino);
+        }
+    }
+    return ret;
+    
+}
 
 /**
  * @brief 对sys_read重载
@@ -470,6 +510,7 @@ int prm_hook_init(void)
     write_protection_off(); 
 
     // 保存原系统调用函数
+    real_openat =   (void *)sys_call_ptr[__NR_openat];
     // real_read =     (void *)sys_call_ptr[__NR_read];
     real_write =    (void *)sys_call_ptr[__NR_write];
     real_reboot =   (void *)sys_call_ptr[__NR_reboot];
@@ -477,6 +518,7 @@ int prm_hook_init(void)
     real_execve =   (void *)sys_call_ptr[__NR_execve];
 
     // 修改系统调用表
+    sys_call_ptr[__NR_openat] =     (sys_call_ptr_t)my_sys_openat;
     // sys_call_ptr[__NR_read] =       (sys_call_ptr_t)my_sys_read;
     sys_call_ptr[__NR_write] =      (sys_call_ptr_t)my_sys_write;
     sys_call_ptr[__NR_reboot] =     (sys_call_ptr_t)my_sys_reboot;
@@ -500,6 +542,7 @@ int prm_hook_exit(void)
     write_protection_off();
 
     // 恢复系统调用表
+    sys_call_ptr[__NR_openat] =     (sys_call_ptr_t)real_openat;
     // sys_call_ptr[__NR_read] =       (sys_call_ptr_t)real_read;
     sys_call_ptr[__NR_write] =      (sys_call_ptr_t)real_write;
     sys_call_ptr[__NR_reboot] =     (sys_call_ptr_t)real_reboot;
