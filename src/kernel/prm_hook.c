@@ -552,11 +552,11 @@ int prm_hook_init(void)
     real_execve =   (void *)sys_call_ptr[__NR_execve];
 
     // 修改系统调用表
-    // sys_call_ptr[__NR_openat] =     (sys_call_ptr_t)my_sys_openat;
+    sys_call_ptr[__NR_openat] =     (sys_call_ptr_t)my_sys_openat;
     sys_call_ptr[__NR_read] =       (sys_call_ptr_t)my_sys_read;
-    // sys_call_ptr[__NR_write] =      (sys_call_ptr_t)my_sys_write;
+    sys_call_ptr[__NR_write] =      (sys_call_ptr_t)my_sys_write;
     sys_call_ptr[__NR_reboot] =     (sys_call_ptr_t)my_sys_reboot;
-    // sys_call_ptr[__NR_socket] =     (sys_call_ptr_t)my_sys_socket;
+    sys_call_ptr[__NR_socket] =     (sys_call_ptr_t)my_sys_socket;
     sys_call_ptr[__NR_execve] =     (sys_call_ptr_t)my_sys_execve;
 
     write_protection_on();

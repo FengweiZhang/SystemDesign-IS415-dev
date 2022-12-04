@@ -20,8 +20,12 @@ int main(){
         {
             perror("read test1 failed");
         }
+        else
+        {
+            printf("read test1 succeed\n");
+        }
         fclose(pf);
-        printf("read test1 succeed\n");
+        
     }
 
     pf = fopen(filename2, "r");
@@ -36,8 +40,11 @@ int main(){
         {
             perror("read test2 failed");
         }
+        else
+        {
+            printf("read test2 succeed\n");
+        }
         fclose(pf);
-        printf("read test1 succeed\n");
     }
     
     pf = fopen(filename3, "r");
@@ -52,8 +59,11 @@ int main(){
         {
             perror("read test3 failed");
         }
+        else
+        {
+            printf("read test2 succeed\n");
+        }
         fclose(pf);
-        printf("read test3 succeed\n");
     }
 
     pf = fopen(filename4, "r");
@@ -68,8 +78,11 @@ int main(){
         {
             perror("read test4 failed");
         }
+        else
+        {
+            printf("read test2 succeed\n");
+        }
         fclose(pf);
-        printf("read test4 succeed\n");
     }
     return 0;
     
