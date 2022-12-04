@@ -316,7 +316,7 @@ int msg_handle(struct prm_msg *msg, sqlite3 *db)
         }
         else if (msg->p_type == P_REG)
         {
-            printf("Check rights: REG %u, %d\n", msg->uid, msg->ino);
+            printf("Check rights: REG %u, %u\n", msg->uid, msg->ino);
             result = user_access_file(db, msg->ino, msg->uid, msg->p_type);
             printf("查询结果%d\n", result);
             if (result == 1)
