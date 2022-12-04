@@ -46,6 +46,7 @@ struct req
     int level;
     unsigned long uid; // uid
     unsigned long ino; //文件号,或设备、网络代表号
+    // int type;
 };
 
 /**
@@ -146,32 +147,38 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid, unsigned cha
     {
     case OP_SUCCESS:
         printf("operation success!\n");
-        logwrite(info,"%s", "operation success!"); 
+        logwrite(info, "%s", "operation success!");
         break;
     case OP_FAIL:
         printf("operation fail!\n");
-        logwrite(warn,"%s", "operation fail!"); 
+        logwrite(warn, "%s", "operation fail!");
         break;
     case OP_NOT_FIND:
         printf("do not find user or file level!\n");
-        logwrite(warn,"%s", "do not find user or file level!"); 
+        logwrite(warn, "%s", "do not find user or file level!");
         break;
     default:
         printf("some error!\n");
-        logwrite(error,"%s", "some error!"); 
+        logwrite(error, "%s", "some error!");
         break;
     }
 
     if (op == GET_USER_LEVEL)
     {
         printf("get user level : %d\n", rspbuf.level);
-        logwrite(info,"get user level : %d", rspbuf.level); 
+        logwrite(info, "get user level : %d", rspbuf.level);
     }
 
     if (op == GET_FILE_LEVEL)
     {
         printf("get file level : %d\n", rspbuf.level);
-        logwrite(info,"get file level : %d", rspbuf.level); 
+        logwrite(info, "get file level : %d", rspbuf.level);
+    }
+
+    if (op == GET_USER_TO_OTHER_LEVEL)
+    {
+        printf("get user to other level : %d\n ,other:%lu, 1 stdin,2 stdout,3 stderr,5 root,6 net,7 log\n", rspbuf.level, reqbuf.ino);
+        logwrite(info, "get user to other level : %d", rspbuf.level);
     }
 
     // 关闭socket 删除文件
@@ -191,8 +198,8 @@ void usage(void)
                    "  -g (get)	get level\n"
                    "  -d (delete)	delete level\n"
                    "  -u (user)	input user name for operation\n"
-                   "  -f (file)	input file path for operation\n"
-                   "  -l (level)	set level\n");
+                   "  -f (file)	input file path for operation or other\n"
+                   "  other: 1 stdin,2 stdout,3 stderr,5 root,6 net,7 log\n");
 }
 
 /**
@@ -215,7 +222,7 @@ int main(int argc, char **argv)
     struct stat file_stat;
     // 解析参数，如果一个连字符后面多个选项，只识别最后一个 f设置文件，u设置用户,l为level,s:set,d:delete,g:get
     // 例如：fvault -cl等价于fvault -l，循环解析
-    while ((ch = getopt(argc, argv, "s:gdf:u:")) != -1)
+    while ((ch = getopt(argc, argv, "s:gdf:u:o")) != -1)
     {
         switch (ch)
         {
@@ -227,7 +234,7 @@ int main(int argc, char **argv)
                 return -1;
             }
             mode2 = 0;
-            level = optarg[0]-'0';
+            level = optarg[0] - '0';
             break;
         case 'g':
             if (mode2 != -1)
@@ -270,7 +277,7 @@ int main(int argc, char **argv)
     if (getuid() != 0)
     {
         printf("Operation not Permitted\n");
-        logwrite(error,"%s","Operation not Permitted");
+        logwrite(error, "%s", "Operation not Permitted");
         return 0;
     }
     // 对应文件来说不存在要报错
@@ -281,16 +288,16 @@ int main(int argc, char **argv)
         {
             // 获得文件的inode节点号
             inode = file_stat.st_ino;
-            printf("file inode : %lu \n",inode);
+            printf("file inode : %lu \n", inode);
         }
         else
         {
             printf("%s: No such file or directory\n", filepath);
-            logwrite(error,"%s: No such file or directory",filepath);
+            logwrite(error, "%s: No such file or directory", filepath);
         }
     }
     // 对于用户名来说不存在要报错
-    if (mode1 == 0)
+    if (mode1 == 0 || mode1 == 2)
     {
         user = getpwnam(username);
         if (user != NULL)
@@ -300,7 +307,17 @@ int main(int argc, char **argv)
         else
         {
             printf("%s: No such user\n", username);
-            logwrite(error,"%s: No such user", username);
+            logwrite(error, "%s: No such user", username);
+        }
+    }
+    // for other
+    if (mode1 == 2)
+    {
+        inode = filepath[0] - '0';
+        printf("inode: %lu,option:%d\n", inode, option);
+        if (inode < 1 || inode > 7 || inode == 4)
+        {
+            usage();
         }
     }
 
