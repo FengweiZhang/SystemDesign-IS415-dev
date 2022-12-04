@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # 设置用户的权限
-sudo ./client.exe -s 3 -u pity3
-sudo ./client.exe -s 2 -u pity2
 sudo ./client.exe -s 1 -u pity1
-sudo ./client.exe -s 0 -u pity
+sudo ./client.exe -s 2 -u pity2
+sudo ./client.exe -s 3 -u pity3
+sudo ./client.exe -s 4 -u pity4
 
 
 # 设置文件的权限
