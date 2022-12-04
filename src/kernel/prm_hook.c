@@ -206,6 +206,7 @@ asmlinkage long my_sys_openat(struct pt_regs *regs)
     else
     {
         ret = -1;
+        if (p_type == P_REG) printk("Block: read REG file uid=%u inode=%ld\n", uid, ino);
     }
 
     return ret;
