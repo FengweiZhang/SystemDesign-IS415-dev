@@ -4,7 +4,7 @@ database/a.out
 database/test.db
 src/user/client.exe
 src/user/server.exe
-src/user/log/*
+src/user/log/*.log
 
 src/kernel/.Module.symvers.cmd
 src/kernel/.modules.order.cmd
