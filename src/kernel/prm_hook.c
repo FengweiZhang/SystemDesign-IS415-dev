@@ -157,21 +157,57 @@ asmlinkage long my_sys_openat(struct pt_regs *regs)
     int p_result = 0;
     int p_type;
 
-    if (ret == -1)
+    uid = current_uid().val;
+    if (uid == 1001)
     {
-        return ret;
+    if (ret < 0)
+    {
+        // linux 本身权限控制不通过，不处理
+        p_result = CHECK_RESULT_PASS;
     }
     else
     {
         if(get_info_from_fd(ret, &ino, &uid, &f_type) == PRM_ERROR)
         {
-            printk("Error fd\n");
+            
+            // 获取inode失败，默认通过
+            p_result = CHECK_RESULT_PASS;
         }
         else
         {
-            printk("inode:%ld\n", ino);
+            p_type = P_U;
+            if (f_type == FILE_REG){
+                p_type = P_REG;
+            }
+
+            if(p_type == P_U)
+            {
+                // 未定义的文件类型，调用原函数
+                p_result = CHECK_RESULT_PASS;
+            }
+            else
+            {
+                int check_ret = PRM_ERROR;
+                check_ret = check_privilege(ino, uid, p_type, &p_result);
+                if(check_ret != PRM_SUCCESS)
+                {
+                    // 权限查询出错，默认通过
+                    p_result = CHECK_RESULT_PASS;
+                }
+            }
         }
     }
+    }
+
+    if(p_result != CHECK_RESULT_NOTPASS)
+    {
+        // ret =  real_openat(regs);
+    }
+    else
+    {
+        ret = -1;
+    }
+
     return ret;
     
 }
