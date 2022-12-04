@@ -177,8 +177,18 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid, unsigned cha
 
     if (op == GET_USER_TO_OTHER_LEVEL)
     {
-        printf("get user to other level : %d\n ,other:%lu, 1 stdin,2 stdout,3 stderr,5 root,6 net,7 log\n", rspbuf.level, reqbuf.ino);
-        logwrite(info, "get user to other level : %d", rspbuf.level);
+        printf("get user to other level : %d\n , symbol of other file:%lu\n", rspbuf.level, reqbuf.ino);
+        if (rspbuf.level > 0)
+        {
+            printf("You have permission!");
+        }
+        else
+        {
+            printf("You don't have permission!");
+        }
+
+        printf("all symbol:1 stdin,2 stdout,3 stderr,5 root,6 net,7 log\n");
+        logwrite(info, "get user to other file level : %d", rspbuf.level);
     }
 
     // 关闭socket 删除文件
