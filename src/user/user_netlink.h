@@ -3,7 +3,6 @@
 
 
 #include "prm_error.h"
-#include "databaseExtension.h"
 
 #include <stdio.h>
 #include <sys/socket.h>
@@ -55,6 +54,10 @@ struct prm_msg {
 #define P_STDOUT        (int32_t)2      
 #define P_STDERR        (int32_t)3
 #define P_REG           (int32_t)4      // 常规文件
+#define P_REBOOT        (int32_t)5      // reboot权限
+#define P_NET           (int32_t)6      // 网络权限
+#define P_DEMESG        (int32_t)7      // demsg 权限
+
 
 
 

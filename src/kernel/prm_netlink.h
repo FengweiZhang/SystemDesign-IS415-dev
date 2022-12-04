@@ -50,11 +50,13 @@ struct prm_msg {
 #define P_STDOUT        (s32)2      
 #define P_STDERR        (s32)3
 #define P_REG           (s32)4      // 常规文件
-
+#define P_REBOOT        (s32)5      // reboot权限
+#define P_NET           (s32)6      // 网络权限
+#define P_DEMESG        (s32)7      // demsg 权限
 
 // End: Same in both kernel mode and user mode
 
-#define SEM_WAIT_CYCLE      1000
+#define SEM_WAIT_CYCLE      250
 
 // 用户内核态进程间数据传递的结构体
 struct sem_msg {

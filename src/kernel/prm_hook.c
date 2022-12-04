@@ -9,6 +9,8 @@
 #include <linux/syscalls.h>
 #include <asm/unistd_64.h>
 #include <asm/ptrace.h>
+#include <asm/uaccess.h>
+#include <linux/fs.h>
 
 // define a function pointer 
 typedef void (* sys_call_ptr_t)(void);
@@ -26,6 +28,7 @@ static struct kprobe kp = {
     // .symbol_name = "kallsyms_lookup_name"
     .symbol_name = "sys_call_table"
 };
+
 
 /**
  * @brief 从文件描述符获取文件的信息
@@ -45,7 +48,9 @@ int get_info_from_fd(unsigned int fd, unsigned long * ino, uid_t * uid, int *typ
     // 获取 uid
     *uid = current_uid().val;   // unsigned int
     // 获取fd对应的file struct
-    file_p = fget_raw(fd);
+    // file_p = fget_raw(fd);
+    struct fd f = fdget(fd);
+    file_p = f.file;
     if (!file_p)
     {
         // 获取失败
@@ -126,9 +131,87 @@ typedef asmlinkage long (*sys_call_t)(struct pt_regs*);
 
 
 // 原始的系统调用函数
+sys_call_t real_openat;
 sys_call_t real_read;
 sys_call_t real_write;
+sys_call_t real_reboot;
+sys_call_t real_socket;
+sys_call_t real_execve;
 
+
+/**
+ * @brief 对sys_openat进行重载
+ * asmlinkage long sys_openat(int dfd, const char __user *filename, int flags, umode_t mode);
+ * 
+ * @param regs 
+ * @return asmlinkage 
+ */
+asmlinkage long my_sys_openat(struct pt_regs *regs)
+{
+    long ret =  real_openat(regs);
+
+    // unsigned int fd = 0;
+    unsigned long ino = 0;
+    uid_t uid = 0;
+    int f_type = 0;
+    int p_result = 0;
+    int p_type;
+
+    uid = current_uid().val;
+    if (uid == 1001)
+    {
+    if (ret < 0)
+    {
+        // linux 本身权限控制不通过，不处理
+        p_result = CHECK_RESULT_PASS;
+    }
+    else
+    {
+        if(get_info_from_fd(ret, &ino, &uid, &f_type) == PRM_ERROR)
+        {
+            
+            // 获取inode失败，默认通过
+            p_result = CHECK_RESULT_PASS;
+        }
+        else
+        {
+            p_type = P_U;
+            if (f_type == FILE_REG){
+                p_type = P_REG;
+            }
+
+            if(p_type == P_U)
+            {
+                // 未定义的文件类型，调用原函数
+                p_result = CHECK_RESULT_PASS;
+            }
+            else
+            {
+                int check_ret = PRM_ERROR;
+                check_ret = check_privilege(ino, uid, p_type, &p_result);
+                if(check_ret != PRM_SUCCESS)
+                {
+                    // 权限查询出错，默认通过
+                    p_result = CHECK_RESULT_PASS;
+                }
+            }
+        }
+    }
+    }
+
+    if(p_result != CHECK_RESULT_NOTPASS)
+    {
+        // ret =  real_openat(regs);
+    }
+    else
+    {
+        ret = -1;
+        if (p_type == P_REG) printk("Block: read REG file uid=%u inode=%ld\n", uid, ino);
+    }
+
+    return ret;
+    
+}
 
 /**
  * @brief 对sys_read重载
@@ -139,8 +222,77 @@ sys_call_t real_write;
  */
 asmlinkage long my_sys_read(struct pt_regs * regs)
 {
-    // printk("Hook succeed %lu\n", regs->di);
-    return real_read(regs);
+    long ret = -1;
+
+    unsigned int fd = 0;
+    unsigned long ino = 0;
+    uid_t uid = 0;
+    int f_type = 0;
+    int p_result = 0;
+    int p_type;
+
+    fd = regs->di;
+    if(get_info_from_fd(fd, &ino, &uid, &f_type) == PRM_ERROR)
+    {
+        // 文件标识符无法解析，直接调用原函数
+        p_result = CHECK_RESULT_PASS;
+    }
+    else if (f_type == FILE_U)
+    {
+        // 文件类型无法判断，调用原函数
+        p_result = CHECK_RESULT_PASS;
+    }
+    else
+    {
+        // 判断权限类型
+        p_type = P_U;
+        if(f_type == FILE_STDIN){
+            // p_type = P_STDIN;       // 标准输入
+        }
+        else if (f_type == FILE_STDOUT){
+            // p_type = P_STDOUT;      // 标准输出
+        }
+        else if (f_type == FILE_STDERR){
+            // p_type = P_STDERR;      // 错误输出
+        }
+        else if (f_type == FILE_REG){
+            p_type = P_REG;         // 标准文件
+        }
+
+        if(p_type == P_U)
+        {
+            // 未定义的文件类型，调用原函数
+            p_result = CHECK_RESULT_PASS;
+        }
+        else
+        {
+            int check_ret = PRM_ERROR;
+            check_ret = check_privilege(ino, uid, p_type, &p_result);
+            if(check_ret != PRM_SUCCESS)
+            {
+                // 权限查询出错，默认通过
+                p_result = CHECK_RESULT_PASS;
+            }
+        }
+    }
+
+    // debug
+    // p_result = CHECK_RESULT_PASS;
+
+    // 判断权限检查结果，是否不允许执行
+    if(p_result != CHECK_RESULT_NOTPASS)
+    {
+        ret = real_write(regs);
+    }
+    else
+    {
+        if (p_type == P_STDIN) printk("Block: read STDIN%u\n", uid);
+        if (p_type == P_STDOUT) printk("Block: read STDOUT%u\n", uid);
+        if (p_type == P_STDERR) printk("Block: read STDERR%u\n", uid);
+        if (p_type == P_REG) printk("Block: read REG file uid=%u inode=%ld\n", uid, ino);
+    }
+    
+    return ret;
 }
 
 /**
@@ -160,6 +312,7 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
     uid_t uid = 0;
     int f_type = 0;
     int p_result = 0;
+    int p_type;
 
     fd = regs->di;
     if(get_info_from_fd(fd, &ino, &uid, &f_type) == PRM_ERROR)
@@ -175,15 +328,15 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
     else
     {
         // 判断权限类型
-        int p_type = P_U;
+        p_type = P_U;
         if(f_type == FILE_STDIN){
-            p_type = P_STDIN;       // 标准输入
+            // p_type = P_STDIN;       // 标准输入
         }
         else if (f_type == FILE_STDOUT){
-            p_type = P_STDOUT;      // 标准输出
+            // p_type = P_STDOUT;      // 标准输出
         }
         else if (f_type == FILE_STDERR){
-            p_type = P_STDERR;      // 错误输出
+            // p_type = P_STDERR;      // 错误输出
         }
         else if (f_type == FILE_REG){
             p_type = P_REG;         // 标准文件
@@ -198,34 +351,185 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
         {
             int check_ret = PRM_ERROR;
             check_ret = check_privilege(ino, uid, p_type, &p_result);
-            if (check_ret == PRM_SUCCESS)
+            if(check_ret != PRM_SUCCESS)
             {
-                printk("Privilege check op right\n");
+                // 权限查询出错，默认通过
+                p_result = CHECK_RESULT_PASS;
             }
-            else
-            {
-                if(check_ret == PRM_ERROR_SERVEROFFLINE)
-                {
-                    // printk("Server offline\n");
-                }
-            }
-            p_result = CHECK_RESULT_PASS;
         }
     }
 
+    // debug
+    // p_result = CHECK_RESULT_PASS;
+
     // 判断权限检查结果，是否不允许执行
-    if(p_result == CHECK_RESULT_NOTPASS)
+    if(p_result != CHECK_RESULT_NOTPASS)
     {
-        ret = -1;
+        ret = real_write(regs);
     }
     else
     {
-        ret = real_write(regs);
+        if (p_type == P_STDIN) printk("Block: write STDIN%u\n", uid);
+        if (p_type == P_STDOUT) printk("Block: write STDOUT%u\n", uid);
+        if (p_type == P_STDERR) printk("Block: write STDERR%u\n", uid);
+        if (p_type == P_REG) printk("Block: write REG file uid=%u inode=%ld\n", uid, ino);
     }
     
     return ret;
 }
 
+/**
+ * @brief 对sys_reboot重载
+ * asmlinkage long sys_reboot(int magic1, int magic2, unsigned int cmd, void __user *arg);
+ * 只有root用户才可以使用reboot
+ * 因此只对root用户的reboot的重启权限进行限制
+ * 
+ * @param regs 
+ * @return asmlinkage 
+ */
+asmlinkage long my_sys_reboot(struct pt_regs * regs)
+{
+    long ret = -1;
+    uid_t uid;
+    int p_result = 0;
+
+    uid = current_uid().val;
+    // printk("reboot!!!!!%u\n", uid);
+
+    if (uid == 0)
+    {
+        // 是root用户
+        int check_ret = PRM_ERROR;
+        // inode o for error
+        check_ret = check_privilege(0, uid, P_REBOOT, &p_result);
+        if(check_ret != PRM_SUCCESS)
+        {
+            // 权限查询出错，默认通过
+            p_result = CHECK_RESULT_PASS;
+        }
+        // 若成功查询，结果已经放入了p_result中
+
+        // debug 先设置为都通过
+        // p_result = CHECK_RESULT_PASS;
+    }
+    else
+    {
+        // 普通用户无权调用reboot，由linux系统自行判断
+        p_result = CHECK_RESULT_PASS;
+    }
+
+    if (p_result != CHECK_RESULT_NOTPASS)
+    {
+        ret = real_reboot(regs);
+    }
+    else
+    {
+        printk("Block: reboot %u\n", uid);
+    }
+    return ret;
+}
+
+/**
+ * @brief 对sys_socket进行重载
+ * asmlinkage long sys_socket(int, int, int);
+ * 
+ * @param regs 
+ * @return asmlinkage 
+ */
+asmlinkage long my_sys_socket(struct pt_regs *regs)
+{
+    long ret = -1;
+    uid_t uid;
+    int p_result = 0;
+    int check_ret = PRM_ERROR;
+
+    uid = current_uid().val;
+    // printk("socket create %u\n", uid);
+    check_ret = check_privilege(0, uid, P_NET, &p_result);
+    if(check_ret != PRM_SUCCESS)
+    {
+        // 权限查询出错，默认通过
+        p_result = CHECK_RESULT_PASS;
+    }
+
+    // debug 都通过
+    // p_result = CHECK_RESULT_PASS;
+
+    if(p_result != CHECK_RESULT_NOTPASS)
+    {
+        ret = real_socket(regs);
+    }
+    else
+    {
+        printk("Block: net %u\n", uid);
+    }
+    return ret;
+}
+
+/**
+ * @brief 对sys_execve进行hook
+ * asmlinkage long sys_execve(const char __user *filename,
+		const char __user *const __user *argv,
+		const char __user *const __user *envp);
+ * 
+ * @param regs 
+ * @return asmlinkage 
+ */
+asmlinkage long my_sys_execve(struct pt_regs *regs)
+{
+    long ret = -1;
+    uid_t uid;
+    int p_result = 0;
+    int check_ret = PRM_ERROR;
+    int memcpy_ret = -1;
+
+    // linux 下路经最长为4096byte
+    char filename[4096];
+    char dmesg_name[64] = "/usr/bin/dmesg";
+
+    uid = current_uid().val;
+    // printk("execve: %u: \n", uid);
+    // kernel 不能直接操作user space的内存，因此需要现复制
+    // 如果成功返回0；如果失败，返回有多少个Bytes未完成copy
+    memcpy_ret = copy_from_user(filename, (char *)(regs->di), 4096);
+    if(memcpy_ret != 0)
+    {
+        // 从用户态复制数据出错
+        p_result = CHECK_RESULT_PASS;
+    }
+    else
+    {
+        if (strcmp(dmesg_name, filename) == 0)
+        {
+            // 是 demsg 命令
+            // printk("execv: %s uid=%u\n", filename, uid);
+            check_ret = check_privilege(0, uid, P_DEMESG, &p_result);
+            if(check_ret != PRM_SUCCESS)
+            {
+                // 权限查询出错，默认通过
+                p_result = CHECK_RESULT_PASS;
+            }
+        }
+        else
+        {
+            p_result = CHECK_RESULT_PASS;    
+        }
+    }
+    // printk("%s\n", filename);
+
+    // debug
+    // p_result = CHECK_RESULT_PASS;
+
+    if(p_result != CHECK_RESULT_NOTPASS)
+    {
+        ret = real_execve(regs);
+    }
+    else
+    {
+        printk("Block: dmesg %u\n", uid);
+    }
+    return ret;
+}
 
 /**
  * @brief 进行 hook
@@ -242,11 +546,21 @@ int prm_hook_init(void)
     // hook system call
     write_protection_off(); 
 
+    // 保存原系统调用函数
+    real_openat =   (void *)sys_call_ptr[__NR_openat];
     // real_read =     (void *)sys_call_ptr[__NR_read];
     real_write =    (void *)sys_call_ptr[__NR_write];
-    
+    real_reboot =   (void *)sys_call_ptr[__NR_reboot];
+    // real_socket =   (void *)sys_call_ptr[__NR_socket];
+    real_execve =   (void *)sys_call_ptr[__NR_execve];
+
+    // 修改系统调用表
+    sys_call_ptr[__NR_openat] =     (sys_call_ptr_t)my_sys_openat;
     // sys_call_ptr[__NR_read] =       (sys_call_ptr_t)my_sys_read;
     sys_call_ptr[__NR_write] =      (sys_call_ptr_t)my_sys_write;
+    sys_call_ptr[__NR_reboot] =     (sys_call_ptr_t)my_sys_reboot;
+    // sys_call_ptr[__NR_socket] =     (sys_call_ptr_t)my_sys_socket;
+    sys_call_ptr[__NR_execve] =     (sys_call_ptr_t)my_sys_execve;
 
     write_protection_on();
     printk("%s %s: System calls hook set.\n", module_name, name);
@@ -264,8 +578,13 @@ int prm_hook_exit(void)
     // clear hook
     write_protection_off();
 
+    // 恢复系统调用表
+    sys_call_ptr[__NR_openat] =     (sys_call_ptr_t)real_openat;
     // sys_call_ptr[__NR_read] =       (sys_call_ptr_t)real_read;
     sys_call_ptr[__NR_write] =      (sys_call_ptr_t)real_write;
+    sys_call_ptr[__NR_reboot] =     (sys_call_ptr_t)real_reboot;
+    // sys_call_ptr[__NR_socket] =     (sys_call_ptr_t)real_socket;
+    sys_call_ptr[__NR_execve] =     (sys_call_ptr_t)real_execve;
 
     write_protection_on();
     printk("%s %s: System calls hook unset.\n", module_name, name);

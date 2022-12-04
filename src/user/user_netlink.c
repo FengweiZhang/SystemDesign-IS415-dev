@@ -10,7 +10,6 @@
  */
 
 #include "user_netlink.h"
-#include <stdio.h>
 
 static int netlink_socket = -1;
 static struct sockaddr_nl  *user_addr = NULL;      // self address
@@ -123,9 +122,22 @@ int u2k_send(char *buf, size_t len)
         return PRM_ERROR;
     }
 
+    // printf("try to send 1\n");
     memset(&(msg->msg_len), 0, PAYLOAD_MAX_SIZE+4);
     memcpy(msg->msg_data, buf, len);
     msg->msg_len = len;
+    // printf("try to send 2\n");
+    
+    // printf("%d\n", msg->msg_len);
+    // struct prm_msg *ptr = msg->msg_data;
+    // printf("%d\n", ptr->index);
+    // printf("%08x\n", ptr->type);
+    // printf("%08x\n", ptr->ino);
+    // printf("%08x\n", ptr->uid);
+    // printf("%d\n", ptr->p_type);
+    // printf("%d\n", ptr->result_type);
+    // printf("%016lx\n", ptr->sem_msg_ptr);
+    
 
     ssize_t send_len = sendto(netlink_socket, msg, msg->nlh.nlmsg_len, 0, (struct sockaddr *)kernel_addr, sizeof(struct sockaddr_nl));
     // printf("=========\n");
@@ -253,13 +265,99 @@ int msg_handle(struct prm_msg *msg)
         int result = 0;
 
         // 权限检查
-        printf("Handle privilege check\n");
+        printf("Handle privilege check: \n");
+        if (msg->p_type == P_DEMESG)
+        {
+            // 禁止用户1000对于dmesg的访问
+            printf("Check rights: dmesg\n");
+            if(msg->uid == 1000)
+            {
+                send_msg.result_type = CHECK_RESULT_NOTPASS;
+            }
+            else
+            {
+                send_msg.result_type = CHECK_RESULT_PASS;
+            }
+        }
+        else if (msg->p_type == P_NET)
+        {
+            // 禁止1001对于net的访问
+            printf("Check rights: net\n");
+            if(msg->uid == 1001)
+            {
+                send_msg.result_type = CHECK_RESULT_NOTPASS;
+            }
+            else
+            {
+                send_msg.result_type = CHECK_RESULT_PASS;
+            }
+        }
+        else if (msg->p_type == P_REBOOT)
+        {
+            // 禁止root重启
+            printf("Check rights: reboot\n");
+            send_msg.result_type = CHECK_RESULT_NOTPASS;
+        }
+        else if (msg->p_type == P_REG)
+        {
+            printf("Check rights: REG %u, %ld\n", msg->uid, msg->ino);
+            if(msg->uid == 1001 && msg->ino == 2236977)
+            {
+                send_msg.result_type = CHECK_RESULT_NOTPASS;
+            }
+            else
+            {
+                send_msg.result_type = CHECK_RESULT_PASS;
+            }    
+        }
+        // else if (msg->p_type == P_STDIN)
+        // {
+        //     printf("Check rights: STDIN\n");
+        //     if(msg->uid == 1001)
+        //     {
+        //         send_msg.result_type = CHECK_RESULT_PASS;
+        //     }
+        //     else
+        //     {
+        //         send_msg.result_type = CHECK_RESULT_PASS;
+        //     }
+        // }
+        // else if (msg->p_type == P_STDOUT)
+        // {
+        //     // printf("Check rights: STDOUT\n");
+        //     if(msg->uid == 1001)
+        //     {
+        //         printf("Check rights: STDOUT\n");
+        //         send_msg.result_type = CHECK_RESULT_NOTPASS;
+        //     }
+        //     else
+        //     {
+        //         printf("Check rights: STDOUT\n");
+        //         send_msg.result_type = CHECK_RESULT_PASS;
+        //     }
+        // }
+        // else if (msg->p_type == P_STDERR)
+        // {
+        //     printf("Check rights: STDERR\n");
+        //     if(msg->uid == 1001)
+        //     {
+        //         send_msg.result_type = CHECK_RESULT_NOTPASS;
+        //     }
+        //     else
+        //     {
+        //         send_msg.result_type = CHECK_RESULT_PASS;
+        //     }
+        // }
+        else
+        {
+            send_msg.result_type = CHECK_RESULT_PASS;
+        }
 
-        result = user_access_file(msg->ino, msg->uid, msg->p_type);
+        // result = user_access_file(msg->ino, msg->uid, msg->p_type);
 
         // 构建返回消息
         send_msg.type = PRM_MSG_TYPE_RESULT;
-        send_msg.result_type = CHECK_RESULT_PASS;
+        // send_msg.result_type = CHECK_RESULT_PASS;
         send_msg.sem_msg_ptr = msg->sem_msg_ptr;
         // 返回消息
         u2k_send((char *)&send_msg, sizeof(struct prm_msg));
@@ -281,10 +379,13 @@ int main ()
     u2k_connect();
     printf("connect!\n");
 
-    u2k_recv(buf, 1024);
-    printf("rece msg\n");
-    msg_handle(buf);
-    printf("handel finish\n");
+    while(1)
+    {   
+        u2k_recv(buf, 1024);
+        printf("rece msg\n");
+        msg_handle(buf);
+        printf("handel finish\n");
+    }
 
     scanf("%s", msg);
     u2k_disconnect();

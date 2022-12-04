@@ -12,5 +12,6 @@ int main(){
         exit(0);
     }
     fputs(buf, pf);
+    perror("write failed");
     fclose(pf);
 }

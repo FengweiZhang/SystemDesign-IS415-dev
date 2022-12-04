@@ -17,6 +17,7 @@ static char *name = "Netlink";
 static struct sock *netlink_socket = NULL;  // netlink socket
 static pid_t pid = -1;      // user space server pid (pid_t is int)，同时是连接的状态
 static atomic_t index;      // prm_msg 消息 index
+static int fail_count = 0;
 
 /**
  * @brief 查询权限信息
@@ -31,6 +32,7 @@ int check_privilege(unsigned long ino, uid_t uid, int p_type, int *result)
 {
     struct prm_msg msg;
     struct sem_msg *ptr = NULL;
+    int down_ret = -1;
 
     // 检查用户态服务器是否已经连接
     if(pid==-1)
@@ -52,11 +54,34 @@ int check_privilege(unsigned long ino, uid_t uid, int p_type, int *result)
     msg.uid = (u32)uid;
     msg.p_type = (s32)p_type;
     msg.sem_msg_ptr = (u64)ptr;
+
+    // if(p_type == P_DEMESG) printk("Check rights: dmesg uid=%u!\n", uid);
+    // if(p_type == P_NET) printk("Check rights: net uid=%u!\n", uid);
+    // if(p_type == P_REBOOT) printk("Check rights: reboot uid=%u!\n", uid);
+    // if (p_type == P_STDIN) printk("Check rights: STDIN uid=%u\n", uid);
+    // if (p_type == P_STDOUT) printk("Check rights: STDOUT uid=%u\n", uid);
+    // if (p_type == P_STDERR) printk("Check rights: STDERR uid=%u\n", uid);
+    // if (p_type == P_REG) printk("Check rights: REG file uid=%u inode=%ld\n", uid, ino);
+
     // 向内核态程序发送查询消息
     k2u_send((char *)&msg, sizeof(struct sem_msg));
     // 等待返回消息
-    down(&(ptr->sem));
-    // dowm(&(ptr->sem), SEM_WAIT_CYCLE) // 在SEM_WAIT_CYCLE个时钟周期内等待信号量
+    // down(&(ptr->sem));
+    down_ret = down_timeout(&(ptr->sem), SEM_WAIT_CYCLE); // 在SEM_WAIT_CYCLE个时钟周期内等待信号量
+    if(down_ret != 0)
+    {
+        fail_count += 1;
+        printk("%s %s: Cannot get response from pid=%d\n", module_name, name, pid);
+        if(fail_count >= 3)
+        {
+            // 多次失败取消连接
+            printk("%s %s: Disconnection caused by failure, pid=%d\n", module_name, name, pid);
+            // 重置连接状态
+            pid = -1;
+            fail_count = 0;
+            printk("%s %s: Connection was closed\n", module_name, name);
+        }
+    }
 
     kfree(ptr);
     if(ptr->status == SEM_STATUS_LOADED)
@@ -85,7 +110,7 @@ int k2u_send(char *buf, size_t len)
     *(u32 *)NLMSG_DATA(nlh) = len;
     memcpy((char *)NLMSG_DATA(nlh)+4, buf, len);
 
-    printk("%s %s: Send netlink msg to user space!\n", module_name, name);
+    // printk("%s %s: Send netlink msg to user space!\n", module_name, name);
     return nlmsg_unicast(netlink_socket, skb_out, pid);
 }
 
@@ -111,8 +136,7 @@ static void netlink_message_handle(struct sk_buff *skb)
     // get data
     memcpy(buf, (char *)msg->msg_data, (size_t)msg->msg_len);
 
-    printk("%s %s: Netlink msg recieved!\n", module_name, name);
-
+    // printk("%s %s: Netlink msg recieved!\n", module_name, name);
 
     // handle different msg
     // @param buf, msg->msg_len 
@@ -130,6 +154,7 @@ static void netlink_message_handle(struct sk_buff *skb)
         printk("%s %s: Send connection confirm message to pid=%d\n",
             module_name, name, pid);
         k2u_send((char *)ptr, sizeof(struct prm_msg));
+        fail_count = 0;
 
     }
     else if(ptr->type == PRM_MSG_TYPE_DISCONNECT)
@@ -140,6 +165,7 @@ static void netlink_message_handle(struct sk_buff *skb)
             module_name, name, msg->nlh.nlmsg_pid, pid);
         // 重置连接状态
         pid = -1;
+        fail_count = 0;
         printk("%s %s: Connection was closed\n", module_name, name);
 
     }
@@ -164,10 +190,10 @@ static void netlink_message_handle(struct sk_buff *skb)
     {
         // 出现了未知的消息类型
         printk("Unknown message type\n");
-        printk("%08x\n", *(((u32 *)ptr)+0));
-        printk("%08x\n", *(((u32 *)ptr)+1));
-        printk("%08x\n", *(((u32 *)ptr)+2));
-        printk("%016llx\n", *(u64 *)(((u32 *)ptr)+3));        
+        // printk("%08x\n", *(((u32 *)ptr)+0));
+        // printk("%08x\n", *(((u32 *)ptr)+1));
+        // printk("%08x\n", *(((u32 *)ptr)+2));
+        // printk("%016llx\n", *(u64 *)(((u32 *)ptr)+3));        
     }
 
 
