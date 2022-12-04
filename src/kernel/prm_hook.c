@@ -550,16 +550,16 @@ int prm_hook_init(void)
     // real_openat =   (void *)sys_call_ptr[__NR_openat];
     // real_read =     (void *)sys_call_ptr[__NR_read];
     // real_write =    (void *)sys_call_ptr[__NR_write];
-    // real_reboot =   (void *)sys_call_ptr[__NR_reboot];
-    real_socket =   (void *)sys_call_ptr[__NR_socket];
+    real_reboot =   (void *)sys_call_ptr[__NR_reboot];
+    // real_socket =   (void *)sys_call_ptr[__NR_socket];
     real_execve =   (void *)sys_call_ptr[__NR_execve];
 
     // 修改系统调用表
     // sys_call_ptr[__NR_openat] =     (sys_call_ptr_t)my_sys_openat;
     // sys_call_ptr[__NR_read] =       (sys_call_ptr_t)my_sys_read;
     // sys_call_ptr[__NR_write] =      (sys_call_ptr_t)my_sys_write;
-    // sys_call_ptr[__NR_reboot] =     (sys_call_ptr_t)my_sys_reboot;
-    sys_call_ptr[__NR_socket] =     (sys_call_ptr_t)my_sys_socket;
+    sys_call_ptr[__NR_reboot] =     (sys_call_ptr_t)my_sys_reboot;
+    // sys_call_ptr[__NR_socket] =     (sys_call_ptr_t)my_sys_socket;
     sys_call_ptr[__NR_execve] =     (sys_call_ptr_t)my_sys_execve;
 
     write_protection_on();
@@ -582,8 +582,8 @@ int prm_hook_exit(void)
     // sys_call_ptr[__NR_openat] =     (sys_call_ptr_t)real_openat;
     // sys_call_ptr[__NR_read] =       (sys_call_ptr_t)real_read;
     // sys_call_ptr[__NR_write] =      (sys_call_ptr_t)real_write;
-    // sys_call_ptr[__NR_reboot] =     (sys_call_ptr_t)real_reboot;
-    sys_call_ptr[__NR_socket] =     (sys_call_ptr_t)real_socket;
+    sys_call_ptr[__NR_reboot] =     (sys_call_ptr_t)real_reboot;
+    // sys_call_ptr[__NR_socket] =     (sys_call_ptr_t)real_socket;
     sys_call_ptr[__NR_execve] =     (sys_call_ptr_t)real_execve;
 
     write_protection_on();

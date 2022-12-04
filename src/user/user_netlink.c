@@ -280,7 +280,6 @@ int msg_handle(struct prm_msg *msg, sqlite3 *db)
             {
                 send_msg.result_type = CHECK_RESULT_PASS;
             }
-            // send_msg.result_type = CHECK_RESULT_PASS;
         }
         else if (msg->p_type == P_NET)
         {
@@ -304,16 +303,16 @@ int msg_handle(struct prm_msg *msg, sqlite3 *db)
             printf("Check rights: reboot\n");
             result = user_access_file(db, msg->ino, msg->uid, msg->p_type);
             printf("查询结果%d\n", result);
-            // if (result == 1)
-            // {
-            //     // 1 代表没通过
-            //     send_msg.result_type = CHECK_RESULT_NOTPASS;
-            // }
-            // else
-            // {
-            //     send_msg.result_type = CHECK_RESULT_PASS;
-            // }
-            send_msg.result_type = CHECK_RESULT_NOTPASS;
+            if (result == 1)
+            {
+                // 1 代表没通过
+                send_msg.result_type = CHECK_RESULT_NOTPASS;
+            }
+            else
+            {
+                send_msg.result_type = CHECK_RESULT_PASS;
+            }
+            // send_msg.result_type = CHECK_RESULT_NOTPASS;
         }
         else if (msg->p_type == P_REG)
         {
