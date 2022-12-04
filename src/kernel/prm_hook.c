@@ -145,8 +145,77 @@ sys_call_t real_execve;
  */
 asmlinkage long my_sys_read(struct pt_regs * regs)
 {
-    // printk("Hook succeed %lu\n", regs->di);
-    return real_read(regs);
+    long ret = -1;
+
+    unsigned int fd = 0;
+    unsigned long ino = 0;
+    uid_t uid = 0;
+    int f_type = 0;
+    int p_result = 0;
+    int p_type;
+
+    fd = regs->di;
+    if(get_info_from_fd(fd, &ino, &uid, &f_type) == PRM_ERROR)
+    {
+        // 文件标识符无法解析，直接调用原函数
+        p_result = CHECK_RESULT_PASS;
+    }
+    else if (f_type == FILE_U)
+    {
+        // 文件类型无法判断，调用原函数
+        p_result = CHECK_RESULT_PASS;
+    }
+    else
+    {
+        // 判断权限类型
+        p_type = P_U;
+        if(f_type == FILE_STDIN){
+            // p_type = P_STDIN;       // 标准输入
+        }
+        else if (f_type == FILE_STDOUT){
+            // p_type = P_STDOUT;      // 标准输出
+        }
+        else if (f_type == FILE_STDERR){
+            // p_type = P_STDERR;      // 错误输出
+        }
+        else if (f_type == FILE_REG){
+            p_type = P_REG;         // 标准文件
+        }
+
+        if(p_type == P_U)
+        {
+            // 未定义的文件类型，调用原函数
+            p_result = CHECK_RESULT_PASS;
+        }
+        else
+        {
+            int check_ret = PRM_ERROR;
+            check_ret = check_privilege(ino, uid, p_type, &p_result);
+            if(check_ret != PRM_SUCCESS)
+            {
+                // 权限查询出错，默认通过
+                p_result = CHECK_RESULT_PASS;
+            }
+        }
+    }
+
+    // debug
+    // p_result = CHECK_RESULT_PASS;
+
+    // 判断权限检查结果，是否不允许执行
+    if(p_result != CHECK_RESULT_NOTPASS)
+    {
+        ret = real_write(regs);
+    }
+    else
+    {
+        if (p_type == P_STDIN) printk("Block: read STDIN%u\n", uid);
+        if (p_type == P_STDOUT) printk("Block: read STDOUT%u\n", uid);
+        if (p_type == P_STDERR) printk("Block: read STDERR%u\n", uid);
+        if (p_type == P_REG) printk("Block: read REG file uid=%u inode=%ld\n", uid, ino);
+    }
+    
+    return ret;
 }
 
 /**
@@ -223,10 +292,10 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
     }
     else
     {
-        if (p_type == P_STDIN) printk("Block: STDIN%u\n", uid);
-        if (p_type == P_STDOUT) printk("Block: STDOUT%u\n", uid);
-        if (p_type == P_STDERR) printk("Block: STDERR%u\n", uid);
-        if (p_type == P_REG) printk("Block: REG file uid=%u inode=%ld\n", uid, ino);
+        if (p_type == P_STDIN) printk("Block: write STDIN%u\n", uid);
+        if (p_type == P_STDOUT) printk("Block: write STDOUT%u\n", uid);
+        if (p_type == P_STDERR) printk("Block: write STDERR%u\n", uid);
+        if (p_type == P_REG) printk("Block: write REG file uid=%u inode=%ld\n", uid, ino);
     }
     
     return ret;
