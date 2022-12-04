@@ -294,6 +294,7 @@ int main(int argc, char **argv)
         {
             printf("%s: No such file or directory\n", filepath);
             logwrite(error, "%s: No such file or directory", filepath);
+            return 0;
         }
     }
     // 对于用户名来说不存在要报错
@@ -308,6 +309,7 @@ int main(int argc, char **argv)
         {
             printf("%s: No such user\n", username);
             logwrite(error, "%s: No such user", username);
+            return 0;
         }
     }
     // for other
