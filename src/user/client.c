@@ -120,8 +120,8 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid, unsigned cha
         exit(1);
     }
 
-    printf("send message\n");
-    // 发送请求
+    // printf("send message\n");
+    //  发送请求
     rc = send(client_sock, &reqbuf, sizeof(struct req), 0);
     if (rc == -1)
     {
@@ -132,7 +132,7 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid, unsigned cha
 
     // 接受数据并处理结果, 错误处理
     rc = recv(client_sock, &rspbuf, sizeof(struct rsp), 0);
-    printf("receive message\n");
+    // printf("receive message\n");
 
     if (rc == -1)
     {
@@ -146,7 +146,7 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid, unsigned cha
     switch (rspbuf.stat)
     {
     case OP_SUCCESS:
-        printf("operation success!\n");
+        // printf("operation success!\n");
         logwrite(info, "%s", "operation success!");
         break;
     case OP_FAIL:
@@ -163,43 +163,43 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid, unsigned cha
         break;
     }
 
-    if (op == GET_USER_LEVEL || rspbuf.stat == OP_SUCCESS)
+    if (op == GET_USER_LEVEL && rspbuf.stat == OP_SUCCESS)
     {
         printf("get user %s level : %d\n", username, rspbuf.level);
-        logwrite(info, "get user %s level : %d\n", username, rspbuf.level);
+        logwrite(info, "get user %s level : %d", username, rspbuf.level);
     }
 
-    if (op == GET_FILE_LEVEL || rspbuf.stat == OP_SUCCESS)
+    if (op == GET_FILE_LEVEL && rspbuf.stat == OP_SUCCESS)
     {
         printf("get file %s level : %d\n", filepath, rspbuf.level);
-        logwrite(info, "get file %s level : %d\n", filepath, rspbuf.level);
+        logwrite(info, "get file %s level : %d", filepath, rspbuf.level);
     }
-    if (op == SET_USER_LEVEL || rspbuf.stat == OP_SUCCESS)
+    if (op == SET_USER_LEVEL && rspbuf.stat == OP_SUCCESS)
     {
         printf("set user %s level : %d\n", username, level);
-        logwrite(info, "set user %s level : %d\n", username, level);
+        logwrite(info, "set user %s level : %d", username, level);
     }
 
-    if (op == SET_FILE_LEVEL || rspbuf.stat == OP_SUCCESS)
+    if (op == SET_FILE_LEVEL && rspbuf.stat == OP_SUCCESS)
     {
         printf("set file %s level : %d\n", filepath, level);
-        logwrite(info, "set file %s level : %d\n", filepath, level);
+        logwrite(info, "set file %s level : %d", filepath, level);
     }
-    if (op == DELETE_USER_LEVEL || rspbuf.stat == OP_SUCCESS)
+    if (op == DELETE_USER_LEVEL && rspbuf.stat == OP_SUCCESS)
     {
         printf("delete user %s level\n", username);
-        logwrite(info, "delete user %s level\n", username);
+        logwrite(info, "delete user %s level", username);
     }
 
-    if (op == DELETE_FILE_LEVEL || rspbuf.stat == OP_SUCCESS)
+    if (op == DELETE_FILE_LEVEL && rspbuf.stat == OP_SUCCESS)
     {
-        printf("delete file %s leveld\n", filepath);
-        logwrite(info, "delete file %s leveld\n", filepath);
+        printf("delete file %s level\n", filepath);
+        logwrite(info, "delete file %s level", filepath);
     }
 
-    if (op == GET_USER_TO_OTHER_LEVEL || rspbuf.stat == OP_SUCCESS)
+    if (op == GET_USER_TO_OTHER_LEVEL && rspbuf.stat == OP_SUCCESS)
     {
-        printf("get user to other level : %d\n , symbol of other file:%lu\n", rspbuf.level, reqbuf.ino);
+        printf("get user to other level : %d\n , symbol of other file:%lu", rspbuf.level, reqbuf.ino);
         if (rspbuf.level > 0)
         {
             printf("You have permission!");
@@ -212,13 +212,13 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid, unsigned cha
         printf("all symbol:5 root,6 net,7 log\n");
         logwrite(info, "get user to other file level : %d", rspbuf.level);
     }
-    if (op == SET_USER_TO_OTHER_LEVEL || rspbuf.stat == OP_SUCCESS)
+    if (op == SET_USER_TO_OTHER_LEVEL && rspbuf.stat == OP_SUCCESS)
     {
         printf("set user to other level : %d\n , symbol of other file:%lu\n", level, reqbuf.ino);
         printf("all symbol:5 root,6 net,7 log\n");
         logwrite(info, "set user to other file level : %d", level);
     }
-    if (op == DELETE_USER_TO_OTHER_LEVEL || rspbuf.stat == OP_SUCCESS)
+    if (op == DELETE_USER_TO_OTHER_LEVEL && rspbuf.stat == OP_SUCCESS)
     {
         printf("delete user to other level , symbol of other file:%lu\n", reqbuf.ino);
 

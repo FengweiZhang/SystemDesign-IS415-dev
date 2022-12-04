@@ -137,7 +137,7 @@ static int initlog(unsigned char loglevel)
         strcat(logsetting->filepath, strdate);
     }
     memcpy(loging.filepath, logsetting->filepath, maxfilepath);
-    printf("logfile:%s \n", loging.filepath);
+    // printf("logfile:%s \n", loging.filepath);
     //打开日志文件
     if (loging.logfile == NULL)
         loging.logfile = fopen(loging.filepath, "a+");
@@ -158,11 +158,12 @@ int logwrite(unsigned char loglevel, char *fromat, ...)
 {
     va_list args;
     //初始化日志
-    if (initlog(loglevel) != 0){
+    if (initlog(loglevel) != 0)
+    {
         printf("initlog error!\n");
         return -1;
     }
-    printf("initlog success!\n");
+    // printf("initlog success!\n");
     //打印日志信息
     va_start(args, fromat);
     printflog(fromat, args);
