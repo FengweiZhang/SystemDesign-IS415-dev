@@ -10,6 +10,7 @@
  */
 
 #include "user_netlink.h"
+#include "databaseExtension.h"
 
 static int netlink_socket = -1;
 static struct sockaddr_nl  *user_addr = NULL;      // self address
@@ -254,7 +255,7 @@ int u2k_reconnect()
  * @param msg 来自内核态的消息指针
  * @return int 
  */
-int msg_handle(struct prm_msg *msg)
+int msg_handle(struct prm_msg *msg, sqlite3 *db)
 {
     struct prm_msg send_msg;
     memset(&send_msg, 0, sizeof(struct prm_msg));
@@ -263,13 +264,13 @@ int msg_handle(struct prm_msg *msg)
     if(msg->type == PRM_MSG_TYPE_CHECK)
     {
         int result = 0;
-
         // 权限检查
         printf("Handle privilege check: \n");
         if (msg->p_type == P_DEMESG)
         {
             // 禁止用户1000对于dmesg的访问
             printf("Check rights: dmesg\n");
+            result = user_access_file(db, msg->ino, msg->uid, msg->p_type);
             if(msg->uid == 1000)
             {
                 send_msg.result_type = CHECK_RESULT_NOTPASS;
@@ -300,7 +301,7 @@ int msg_handle(struct prm_msg *msg)
         }
         else if (msg->p_type == P_REG)
         {
-            printf("Check rights: REG %u, %ld\n", msg->uid, msg->ino);
+            printf("Check rights: REG %u, %d\n", msg->uid, msg->ino);
             if(msg->uid == 1001 && msg->ino == 2236977)
             {
                 send_msg.result_type = CHECK_RESULT_NOTPASS;
@@ -366,33 +367,33 @@ int msg_handle(struct prm_msg *msg)
 }
 
 
-int main ()
-{
-    char buf[1024];
-    char msg[1024];
+// int main ()
+// {
+//     char buf[1024];
+//     char msg[1024];
     
-    // scanf("%s", msg);
-    u2k_socket_init();
-    printf("init succees\n");
+//     // scanf("%s", msg);
+//     u2k_socket_init();
+//     printf("init succees\n");
 
-    // scanf("%s", msg);
-    u2k_connect();
-    printf("connect!\n");
+//     // scanf("%s", msg);
+//     u2k_connect();
+//     printf("connect!\n");
 
-    while(1)
-    {   
-        u2k_recv(buf, 1024);
-        printf("rece msg\n");
-        msg_handle(buf);
-        printf("handel finish\n");
-    }
+//     while(1)
+//     {   
+//         u2k_recv(buf, 1024);
+//         printf("rece msg\n");
+//         // msg_handle(buf);
+//         printf("handel finish\n");
+//     }
 
-    scanf("%s", msg);
-    u2k_disconnect();
-    printf("disconnect");
+//     scanf("%s", msg);
+//     u2k_disconnect();
+//     printf("disconnect");
 
-    // scanf("%s", msg);
-    u2k_socket_release();
-    printf("Release!");
-    return 0;
-}
+//     // scanf("%s", msg);
+//     u2k_socket_release();
+//     printf("Release!");
+//     return 0;
+// }

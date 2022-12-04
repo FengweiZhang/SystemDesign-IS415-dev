@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
+#include "user_netlink.h"
 #include "socket_error.h"
 #include "database.h"
 #include "operation.h"
@@ -283,9 +284,32 @@ int main(int argc, char **argv)
     // 父进程使用netlink与内核模块通信
     if (fork())
     {
-        while (1)
-        {
+        char buf[1024];
+        char msg[1024];
+        
+        // scanf("%s", msg);
+        u2k_socket_init();
+        printf("init succees\n");
+
+        // scanf("%s", msg);
+        u2k_connect();
+        printf("connect!\n");
+
+        while(1)
+        {   
+            u2k_recv(buf, 1024);
+            printf("rece msg\n");
+            msg_handle((struct prm_msg *)buf, db);
+            printf("handel finish\n");
         }
+
+        scanf("%s", msg);
+        u2k_disconnect();
+        printf("disconnect");
+
+        // scanf("%s", msg);
+        u2k_socket_release();
+        printf("Release!");
     }
     // 子进程使用socket与客户端之间通信
     else
