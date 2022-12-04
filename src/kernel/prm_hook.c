@@ -158,8 +158,6 @@ asmlinkage long my_sys_openat(struct pt_regs *regs)
     int p_type;
 
     uid = current_uid().val;
-    if (uid == 1001)
-    {
     if (ret < 0)
     {
         // linux 本身权限控制不通过，不处理
@@ -196,7 +194,6 @@ asmlinkage long my_sys_openat(struct pt_regs *regs)
                 }
             }
         }
-    }
     }
 
     if(p_result != CHECK_RESULT_NOTPASS)
