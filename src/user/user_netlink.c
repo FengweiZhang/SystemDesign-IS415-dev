@@ -300,7 +300,7 @@ int msg_handle(struct prm_msg *msg)
         }
         else if (msg->p_type == P_REG)
         {
-            printf("Check rights: REG\n");
+            printf("Check rights: REG %u, %ld\n", msg->uid, msg->ino);
             if(msg->uid == 1001 && msg->ino == 2236977)
             {
                 send_msg.result_type = CHECK_RESULT_NOTPASS;

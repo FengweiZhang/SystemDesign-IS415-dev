@@ -61,7 +61,7 @@ int check_privilege(unsigned long ino, uid_t uid, int p_type, int *result)
     if (p_type == P_STDIN) printk("Check rights: STDIN uid=%u\n", uid);
     if (p_type == P_STDOUT) printk("Check rights: STDOUT uid=%u\n", uid);
     if (p_type == P_STDERR) printk("Check rights: STDERR uid=%u\n", uid);
-    if (p_type == P_REG && ino == 2236977) printk("Check rights: REG file uid=%u inode=%ld\n", uid, ino);
+    if (p_type == P_REG) printk("Check rights: REG file uid=%u inode=%ld\n", uid, ino);
 
     // 向内核态程序发送查询消息
     k2u_send((char *)&msg, sizeof(struct sem_msg));

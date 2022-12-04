@@ -214,7 +214,7 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
     }
 
     // debug
-    p_result = CHECK_RESULT_PASS;
+    // p_result = CHECK_RESULT_PASS;
 
     // 判断权限检查结果，是否不允许执行
     if(p_result != CHECK_RESULT_NOTPASS)
