@@ -288,17 +288,9 @@ int msg_handle(struct prm_msg *msg, sqlite3 *db)
             printf("Check rights: net\n");
             result = user_access_file(db, msg->ino, msg->uid, msg->p_type);
             printf("查询结果%d\n", result);
-            // if (result == 1)
-            // {
-            //     // 1 代表没通过
-            //     send_msg.result_type = CHECK_RESULT_NOTPASS;
-            // }
-            // else
-            // {
-            //     send_msg.result_type = CHECK_RESULT_PASS;
-            // }
-            if(msg->uid == 1001)
+            if (result == 1)
             {
+                // 1 代表没通过
                 send_msg.result_type = CHECK_RESULT_NOTPASS;
             }
             else
