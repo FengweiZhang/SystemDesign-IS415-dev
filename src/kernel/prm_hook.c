@@ -158,8 +158,6 @@ asmlinkage long my_sys_openat(struct pt_regs *regs)
     int p_type;
 
     uid = current_uid().val;
-    if (uid == 1001)
-    {
     if (ret < 0)
     {
         // linux 本身权限控制不通过，不处理
@@ -196,7 +194,6 @@ asmlinkage long my_sys_openat(struct pt_regs *regs)
                 }
             }
         }
-    }
     }
 
     if(p_result != CHECK_RESULT_NOTPASS)
@@ -282,7 +279,7 @@ asmlinkage long my_sys_read(struct pt_regs * regs)
     // 判断权限检查结果，是否不允许执行
     if(p_result != CHECK_RESULT_NOTPASS)
     {
-        ret = real_write(regs);
+        ret = real_read(regs);
     }
     else
     {
@@ -548,18 +545,18 @@ int prm_hook_init(void)
 
     // 保存原系统调用函数
     real_openat =   (void *)sys_call_ptr[__NR_openat];
-    // real_read =     (void *)sys_call_ptr[__NR_read];
+    real_read =     (void *)sys_call_ptr[__NR_read];
     real_write =    (void *)sys_call_ptr[__NR_write];
     real_reboot =   (void *)sys_call_ptr[__NR_reboot];
-    // real_socket =   (void *)sys_call_ptr[__NR_socket];
+    real_socket =   (void *)sys_call_ptr[__NR_socket];
     real_execve =   (void *)sys_call_ptr[__NR_execve];
 
     // 修改系统调用表
     sys_call_ptr[__NR_openat] =     (sys_call_ptr_t)my_sys_openat;
-    // sys_call_ptr[__NR_read] =       (sys_call_ptr_t)my_sys_read;
+    sys_call_ptr[__NR_read] =       (sys_call_ptr_t)my_sys_read;
     sys_call_ptr[__NR_write] =      (sys_call_ptr_t)my_sys_write;
     sys_call_ptr[__NR_reboot] =     (sys_call_ptr_t)my_sys_reboot;
-    // sys_call_ptr[__NR_socket] =     (sys_call_ptr_t)my_sys_socket;
+    sys_call_ptr[__NR_socket] =     (sys_call_ptr_t)my_sys_socket;
     sys_call_ptr[__NR_execve] =     (sys_call_ptr_t)my_sys_execve;
 
     write_protection_on();
@@ -580,10 +577,10 @@ int prm_hook_exit(void)
 
     // 恢复系统调用表
     sys_call_ptr[__NR_openat] =     (sys_call_ptr_t)real_openat;
-    // sys_call_ptr[__NR_read] =       (sys_call_ptr_t)real_read;
+    sys_call_ptr[__NR_read] =       (sys_call_ptr_t)real_read;
     sys_call_ptr[__NR_write] =      (sys_call_ptr_t)real_write;
     sys_call_ptr[__NR_reboot] =     (sys_call_ptr_t)real_reboot;
-    // sys_call_ptr[__NR_socket] =     (sys_call_ptr_t)real_socket;
+    sys_call_ptr[__NR_socket] =     (sys_call_ptr_t)real_socket;
     sys_call_ptr[__NR_execve] =     (sys_call_ptr_t)real_execve;
 
     write_protection_on();

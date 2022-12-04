@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <sqlite3.h>
 
 // Begin: Same in both kernel mode and user mode
 
@@ -73,6 +74,6 @@ int u2k_reconnect();
 int u2k_send(char *buf, size_t len);
 ssize_t u2k_recv(char *buf, size_t buflen);
 
-int msg_handle(struct prm_msg *msg);
+int msg_handle(struct prm_msg *msg, sqlite3 *db);
 
 #endif

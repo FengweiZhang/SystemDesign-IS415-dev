@@ -73,12 +73,12 @@ int user_access_file(sqlite3 *db, unsigned long inode, unsigned long uid, int ty
         if (level == 0)
         {
             printf("operation deny!");
-            return 0;
+            return 1;
         }
         else
         {
             printf("operation pass!");
-            return 1;
+            return 0;
         }
     }
 }
