@@ -268,22 +268,35 @@ int msg_handle(struct prm_msg *msg, sqlite3 *db)
         printf("Handle privilege check: \n");
         if (msg->p_type == P_DEMESG)
         {
-            // 禁止用户1000对于dmesg的访问
             printf("Check rights: dmesg\n");
             result = user_access_file(db, msg->ino, msg->uid, msg->p_type);
-            if(msg->uid == 1000)
-            {
-                send_msg.result_type = CHECK_RESULT_NOTPASS;
-            }
-            else
-            {
-                send_msg.result_type = CHECK_RESULT_PASS;
-            }
+            printf("查询结果%d\n", result);
+            // if (result == 1)
+            // {
+            //     // 1 代表没通过
+            //     send_msg.result_type = CHECK_RESULT_NOTPASS;
+            // }
+            // else
+            // {
+            //     send_msg.result_type = CHECK_RESULT_PASS;
+            // }
+            send_msg.result_type = CHECK_RESULT_PASS;
         }
         else if (msg->p_type == P_NET)
         {
             // 禁止1001对于net的访问
             printf("Check rights: net\n");
+            result = user_access_file(db, msg->ino, msg->uid, msg->p_type);
+            printf("查询结果%d\n", result);
+            // if (result == 1)
+            // {
+            //     // 1 代表没通过
+            //     send_msg.result_type = CHECK_RESULT_NOTPASS;
+            // }
+            // else
+            // {
+            //     send_msg.result_type = CHECK_RESULT_PASS;
+            // }
             if(msg->uid == 1001)
             {
                 send_msg.result_type = CHECK_RESULT_NOTPASS;
@@ -297,11 +310,33 @@ int msg_handle(struct prm_msg *msg, sqlite3 *db)
         {
             // 禁止root重启
             printf("Check rights: reboot\n");
+            result = user_access_file(db, msg->ino, msg->uid, msg->p_type);
+            printf("查询结果%d\n", result);
+            // if (result == 1)
+            // {
+            //     // 1 代表没通过
+            //     send_msg.result_type = CHECK_RESULT_NOTPASS;
+            // }
+            // else
+            // {
+            //     send_msg.result_type = CHECK_RESULT_PASS;
+            // }
             send_msg.result_type = CHECK_RESULT_NOTPASS;
         }
         else if (msg->p_type == P_REG)
         {
             printf("Check rights: REG %u, %d\n", msg->uid, msg->ino);
+            result = user_access_file(db, msg->ino, msg->uid, msg->p_type);
+            printf("查询结果%d\n", result);
+            // if (result == 1)
+            // {
+            //     // 1 代表没通过
+            //     send_msg.result_type = CHECK_RESULT_NOTPASS;
+            // }
+            // else
+            // {
+            //     send_msg.result_type = CHECK_RESULT_PASS;
+            // }
             if(msg->uid == 1001 && msg->ino == 2236977)
             {
                 send_msg.result_type = CHECK_RESULT_NOTPASS;
