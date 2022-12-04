@@ -141,8 +141,8 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid, unsigned cha
         exit(1);
     }
 
-    printf("%d \n", rspbuf.stat);
-    // 处理结果
+    // printf("%d \n", rspbuf.stat);
+    //  处理结果
     switch (rspbuf.stat)
     {
     case OP_SUCCESS:
@@ -274,7 +274,7 @@ int main(int argc, char **argv)
         case 's':
             if (mode2 != -1)
             {
-                printf("s");
+                // printf("s");
                 usage();
                 return -1;
             }
@@ -284,7 +284,7 @@ int main(int argc, char **argv)
         case 'g':
             if (mode2 != -1)
             {
-                printf("g");
+                // printf("g");
                 usage();
                 return -1;
             }
@@ -293,7 +293,7 @@ int main(int argc, char **argv)
         case 'd':
             if (mode2 != -1)
             {
-                printf("d");
+                // printf("d");
                 usage();
                 return -1;
             }
@@ -313,7 +313,7 @@ int main(int argc, char **argv)
             usage();
             return 0;
         default:
-            printf("other");
+            // printf("other");
             usage();
             return -1;
         }
@@ -372,7 +372,7 @@ int main(int argc, char **argv)
         }
     }
 
-    printf("start handle\n");
+    // printf("start handle\n");
     handle(option, inode, uid, level);
 
     return 0;
