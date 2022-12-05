@@ -89,12 +89,12 @@ int get_info_from_fd(unsigned int fd, unsigned long * ino, uid_t * uid, int *typ
     // }
 
     // get full path
-    if (*type == FILE_DIR && *uid == 1002)
-    {
-        char buf[1000];
-        int buflen = 999;
-        printk("Full Path: %s", dentry_path_raw(file_p->f_path.dentry,buf,buflen));
-    }
+    // if (*type == FILE_DIR && *uid == 1002)
+    // {
+    //     char buf[1000];
+    //     int buflen = 999;
+    //     printk("Full Path: %s", dentry_path_raw(file_p->f_path.dentry,buf,buflen));
+    // }
     return PRM_SUCCESS;
 
     // // get full path
@@ -212,7 +212,8 @@ asmlinkage long my_sys_openat(struct pt_regs *regs)
     else
     {
         ret = -1;
-        if (p_type == P_REG) printk("Block: read REG file uid=%u inode=%ld\n", uid, ino);
+        if (p_type == P_REG) printk("Block: open REG file uid=%u inode=%ld\n", uid, ino);
+        if (p_type == P_DIR) printk("Block: open DIR uid=%u inode=%ld\n", uid, ino);
     }
 
     return ret;
@@ -254,16 +255,10 @@ asmlinkage long my_sys_read(struct pt_regs * regs)
         p_type = P_U;
         if (f_type == FILE_REG){
             p_type = P_REG;         // 标准文件
+        }else if (f_type == FILE_DIR){
+            p_type = P_DIR;
         }
-        // else if(f_type == FILE_STDIN){
-        //     // p_type = P_STDIN;       // 标准输入
-        // }
-        // else if (f_type == FILE_STDOUT){
-        //     // p_type = P_STDOUT;      // 标准输出
-        // }
-        // else if (f_type == FILE_STDERR){
-        //     // p_type = P_STDERR;      // 错误输出
-        // }
+        
         
 
         if(p_type == P_U)
@@ -293,11 +288,9 @@ asmlinkage long my_sys_read(struct pt_regs * regs)
     }
     else
     {
-        if (p_type == P_STDIN) printk("Block: read STDIN%u\n", uid);
-        if (p_type == P_STDOUT) printk("Block: read STDOUT%u\n", uid);
-        if (p_type == P_STDERR) printk("Block: read STDERR%u\n", uid);
         if (p_type == P_REG) printk("Block: read REG file uid=%u inode=%ld\n", uid, ino);
-    }
+        if (p_type == P_DIR) printk("Block: read DIR uid=%u inode=%ld\n", uid, ino);
+    }   
     
     return ret;
 }
@@ -338,16 +331,9 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
         p_type = P_U;
         if (f_type == FILE_REG){
             p_type = P_REG;         // 标准文件
+        }else if (f_type == FILE_DIR){
+            p_type = P_DIR;
         }
-        // else if(f_type == FILE_STDIN){
-        //     // p_type = P_STDIN;       // 标准输入
-        // }
-        // else if (f_type == FILE_STDOUT){
-        //     // p_type = P_STDOUT;      // 标准输出
-        // }
-        // else if (f_type == FILE_STDERR){
-        //     // p_type = P_STDERR;      // 错误输出
-        // }
 
         if(p_type == P_U)
         {
@@ -376,10 +362,8 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
     }
     else
     {
-        if (p_type == P_STDIN) printk("Block: write STDIN%u\n", uid);
-        if (p_type == P_STDOUT) printk("Block: write STDOUT%u\n", uid);
-        if (p_type == P_STDERR) printk("Block: write STDERR%u\n", uid);
         if (p_type == P_REG) printk("Block: write REG file uid=%u inode=%ld\n", uid, ino);
+        if (p_type == P_DIR) printk("Block: write DIR uid=%u inode=%ld\n", uid, ino);
     }
     
     return ret;
