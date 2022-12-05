@@ -181,7 +181,7 @@ asmlinkage long my_sys_openat(struct pt_regs *regs)
         else
         {
             p_type = P_U;
-            if (f_type == FILE_REG){
+            if (f_type == FILE_REG || f_type == FILE_LNK){
                 p_type = P_REG;
             } else if (f_type == FILE_DIR){
                 p_type = P_DIR;
@@ -253,7 +253,7 @@ asmlinkage long my_sys_read(struct pt_regs * regs)
     {
         // 判断权限类型
         p_type = P_U;
-        if (f_type == FILE_REG){
+        if (f_type == FILE_REG || f_type == FILE_LNK){
             p_type = P_REG;         // 标准文件
         }else if (f_type == FILE_DIR){
             p_type = P_DIR;
@@ -329,7 +329,7 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
     {
         // 判断权限类型
         p_type = P_U;
-        if (f_type == FILE_REG){
+        if (f_type == FILE_REG || f_type == FILE_LNK){
             p_type = P_REG;         // 标准文件
         }else if (f_type == FILE_DIR){
             p_type = P_DIR;
