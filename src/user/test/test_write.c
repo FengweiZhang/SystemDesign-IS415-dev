@@ -4,10 +4,10 @@
 
 int main(){
     char buf[10] = "ttt\n";
-    char filename1[100] = "/home/ubuntu/test/test1";
-    char filename2[100] = "/home/ubuntu/test/test2";
-    char filename3[100] = "/home/ubuntu/test/test3";
-    char filename4[100] = "/home/ubuntu/test/test4";
+    char filename1[100] = "./testfile/test1";
+    char filename2[100] = "./testfile/test2";
+    char filename3[100] = "./testfile/test3";
+    char filename4[100] = "./testfile/test4";
     FILE *pf = fopen(filename1, "a");
     if (pf == NULL)
     {
