@@ -79,18 +79,25 @@ int get_info_from_fd(unsigned int fd, unsigned long * ino, uid_t * uid, int *typ
         *type = FILE_SOCK;
     }
 
-    // 获取自定义文件类型
-    if (fd == 0){
-        *type = FILE_STDIN;
-    }else if(fd == 1){
-        *type = FILE_STDOUT;
-    }else if(fd == 2){
-        *type = FILE_STDERR;
-    }
-
-    return PRM_SUCCESS;
+    // 获取自定义文件类型，已经弃用
+    // if (fd == 0){
+    //     *type = FILE_STDIN;
+    // }else if(fd == 1){
+    //     *type = FILE_STDOUT;
+    // }else if(fd == 2){
+    //     *type = FILE_STDERR;
+    // }
 
     // get full path
+    if (*type == FILE_DIR)
+    {
+        char buf[1000];
+        int buflen = 999;
+        printk("Full Path: %s", dentry_path_raw(f->f_path.dentry,buf,buflen));
+    }
+    return PRM_SUCCESS;
+
+    // // get full path
     // char buf[1000];
     // int buflen = 999;
     // printk("Full Path: %s", dentry_path_raw(f->f_path.dentry,buf,buflen));
@@ -176,6 +183,8 @@ asmlinkage long my_sys_openat(struct pt_regs *regs)
             p_type = P_U;
             if (f_type == FILE_REG){
                 p_type = P_REG;
+            } else if (f_type == FILE_DIR){
+                p_type = P_DIR;
             }
 
             if(p_type == P_U)
@@ -243,18 +252,19 @@ asmlinkage long my_sys_read(struct pt_regs * regs)
     {
         // 判断权限类型
         p_type = P_U;
-        if(f_type == FILE_STDIN){
-            // p_type = P_STDIN;       // 标准输入
-        }
-        else if (f_type == FILE_STDOUT){
-            // p_type = P_STDOUT;      // 标准输出
-        }
-        else if (f_type == FILE_STDERR){
-            // p_type = P_STDERR;      // 错误输出
-        }
-        else if (f_type == FILE_REG){
+        if (f_type == FILE_REG){
             p_type = P_REG;         // 标准文件
         }
+        // else if(f_type == FILE_STDIN){
+        //     // p_type = P_STDIN;       // 标准输入
+        // }
+        // else if (f_type == FILE_STDOUT){
+        //     // p_type = P_STDOUT;      // 标准输出
+        // }
+        // else if (f_type == FILE_STDERR){
+        //     // p_type = P_STDERR;      // 错误输出
+        // }
+        
 
         if(p_type == P_U)
         {
@@ -326,18 +336,18 @@ asmlinkage long my_sys_write(struct pt_regs * regs)
     {
         // 判断权限类型
         p_type = P_U;
-        if(f_type == FILE_STDIN){
-            // p_type = P_STDIN;       // 标准输入
-        }
-        else if (f_type == FILE_STDOUT){
-            // p_type = P_STDOUT;      // 标准输出
-        }
-        else if (f_type == FILE_STDERR){
-            // p_type = P_STDERR;      // 错误输出
-        }
-        else if (f_type == FILE_REG){
+        if (f_type == FILE_REG){
             p_type = P_REG;         // 标准文件
         }
+        // else if(f_type == FILE_STDIN){
+        //     // p_type = P_STDIN;       // 标准输入
+        // }
+        // else if (f_type == FILE_STDOUT){
+        //     // p_type = P_STDOUT;      // 标准输出
+        // }
+        // else if (f_type == FILE_STDERR){
+        //     // p_type = P_STDERR;      // 错误输出
+        // }
 
         if(p_type == P_U)
         {
