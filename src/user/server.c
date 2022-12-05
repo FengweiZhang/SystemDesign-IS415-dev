@@ -284,6 +284,12 @@ int main(int argc, char **argv)
     // 父进程使用netlink与内核模块通信
     if (fork())
     {
+        if (argc > 1)
+        {
+            while(1){}
+        }
+        else
+        {
         char buf[1024];
         char msg[1024];
         
@@ -310,6 +316,7 @@ int main(int argc, char **argv)
         // scanf("%s", msg);
         u2k_socket_release();
         printf("Release!");
+        }
     }
     // 子进程使用socket与客户端之间通信
     else
