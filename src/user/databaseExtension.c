@@ -24,7 +24,7 @@
  **/
 int user_access_file(sqlite3 *db, unsigned long inode, unsigned long uid, int type)
 {
-    if (type == 4)
+    if (type == 4 || type == 8)
     {
         char uid_ch[20], ino_ch[20];
 
@@ -52,7 +52,7 @@ int user_access_file(sqlite3 *db, unsigned long inode, unsigned long uid, int ty
             return 1;
         }
     }
-    else if (type < 4 || type > 7)
+    else if (type < 4 || type > 8)
     {
         printf("type error!");
         return -2;

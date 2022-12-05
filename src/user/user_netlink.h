@@ -58,7 +58,7 @@ struct prm_msg {
 #define P_REBOOT        (int32_t)5      // reboot权限
 #define P_NET           (int32_t)6      // 网络权限
 #define P_DEMESG        (int32_t)7      // demsg 权限
-
+#define P_DIR           (int32_t)8      // 目录权限
 
 
 
