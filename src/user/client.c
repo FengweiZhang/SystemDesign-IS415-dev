@@ -197,32 +197,37 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid, unsigned cha
         logwrite(info, "delete file %s level", filepath);
     }
 
+    char *str[] = {"root", "net", "log"};
     if (op == GET_USER_TO_OTHER_LEVEL && rspbuf.stat == OP_SUCCESS)
     {
-        printf("get user to other level : %d\n , symbol of other file:%lu", rspbuf.level, reqbuf.ino);
         if (rspbuf.level > 0)
         {
-            printf("You have permission!");
+            printf("user %s have permission of %s!", username, str[reqbuf.ino - 5]);
         }
         else
         {
-            printf("You don't have permission!");
+            printf("user %s don't have permission of %s!", username, str[reqbuf.ino - 5]);
         }
 
-        printf("all symbol:5 root,6 net,7 log\n");
         logwrite(info, "get user to other file level : %d", rspbuf.level);
     }
     if (op == SET_USER_TO_OTHER_LEVEL && rspbuf.stat == OP_SUCCESS)
     {
-        printf("set user to other level : %d\n , symbol of other file:%lu\n", level, reqbuf.ino);
-        printf("all symbol:5 root,6 net,7 log\n");
+        if (reqbuf.level > 0)
+        {
+            printf("give user %s permission of %s!", username, str[reqbuf.ino - 5]);
+        }
+        else
+        {
+            printf("ban user %s permission of %s!", username, str[reqbuf.ino - 5]);
+        }
+
         logwrite(info, "set user to other file level : %d", level);
     }
     if (op == DELETE_USER_TO_OTHER_LEVEL && rspbuf.stat == OP_SUCCESS)
     {
-        printf("delete user to other level , symbol of other file:%lu\n", reqbuf.ino);
+        printf("delete user %s permission of %s\n", username, str[reqbuf.ino - 5]);
 
-        printf("all symbol:5 root,6 net,7 log\n");
         logwrite(info, "delete user to other level , symbol of other file:%lu\n", reqbuf.ino);
     }
 
