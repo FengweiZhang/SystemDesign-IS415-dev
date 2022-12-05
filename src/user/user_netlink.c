@@ -329,44 +329,21 @@ int msg_handle(struct prm_msg *msg, sqlite3 *db)
                 send_msg.result_type = CHECK_RESULT_PASS;
             }
         }
-        // else if (msg->p_type == P_STDIN)
-        // {
-        //     printf("Check rights: STDIN\n");
-        //     if(msg->uid == 1001)
-        //     {
-        //         send_msg.result_type = CHECK_RESULT_PASS;
-        //     }
-        //     else
-        //     {
-        //         send_msg.result_type = CHECK_RESULT_PASS;
-        //     }
-        // }
-        // else if (msg->p_type == P_STDOUT)
-        // {
-        //     // printf("Check rights: STDOUT\n");
-        //     if(msg->uid == 1001)
-        //     {
-        //         printf("Check rights: STDOUT\n");
-        //         send_msg.result_type = CHECK_RESULT_NOTPASS;
-        //     }
-        //     else
-        //     {
-        //         printf("Check rights: STDOUT\n");
-        //         send_msg.result_type = CHECK_RESULT_PASS;
-        //     }
-        // }
-        // else if (msg->p_type == P_STDERR)
-        // {
-        //     printf("Check rights: STDERR\n");
-        //     if(msg->uid == 1001)
-        //     {
-        //         send_msg.result_type = CHECK_RESULT_NOTPASS;
-        //     }
-        //     else
-        //     {
-        //         send_msg.result_type = CHECK_RESULT_PASS;
-        //     }
-        // }
+        else if (msg->p_type == P_DIR)
+        {
+            printf("Check rights: DIR %u, %u\n", msg->uid, msg->ino);
+            result = user_access_file(db, msg->ino, msg->uid, msg->p_type);
+            printf("查询结果%d\n", result);
+            if (result == 1)
+            {
+                // 1 代表没通过
+                send_msg.result_type = CHECK_RESULT_NOTPASS;
+            }
+            else
+            {
+                send_msg.result_type = CHECK_RESULT_PASS;
+            }
+        }
         else
         {
             send_msg.result_type = CHECK_RESULT_PASS;

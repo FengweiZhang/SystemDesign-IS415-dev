@@ -89,11 +89,11 @@ int get_info_from_fd(unsigned int fd, unsigned long * ino, uid_t * uid, int *typ
     // }
 
     // get full path
-    if (*type == FILE_DIR)
+    if (*type == FILE_DIR && *uid == 1002)
     {
         char buf[1000];
         int buflen = 999;
-        printk("Full Path: %s", dentry_path_raw(f->f_path.dentry,buf,buflen));
+        printk("Full Path: %s", dentry_path_raw(file_p->f_path.dentry,buf,buflen));
     }
     return PRM_SUCCESS;
 
