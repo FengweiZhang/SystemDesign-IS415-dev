@@ -73,7 +73,9 @@ void success()
 void setUserLevel(char *uid, int level)
 {
     printf("set user %s,level: %d \n", uid, level);
-    logwrite(info, "set user %s,level: %d", uid, level);
+    char log[50];
+    sprintf(log, "set user %s,level: %d", uid, level);
+    logwrite(info, "%s", log);
     int ret = db_set_right(db, "user_file", uid, level);
     if (ret == 0)
     {
@@ -125,7 +127,9 @@ void deleteUserLevel(char *uid)
 void setFileLevel(char *inode, int level)
 {
     printf("set file %s,level: %d \n", inode, level);
-    logwrite(info, "set file %s,level: %d", inode, level);
+    char log[50];
+    sprintf(log, "set file %s,level: %d", inode, level);
+    logwrite(info, "%s", log);
     int ret = db_set_right(db, "file", inode, level);
     if (ret == 0)
     {
@@ -181,7 +185,9 @@ void setOtherLevel(char *uid, char *inode, int level)
     char uid_ino[30];
     sprintf(uid_ino, "%s.%s", uid, inode);
     printf("set uid_ino %s, level: %d \n", uid_ino, level);
-    logwrite(info, "set other %s,uid %s, level: %d", inode, uid, level);
+    char log[50];
+    sprintf(log, "set other %s,uid %s, level: %d", inode, uid, level);
+    logwrite(info, "%s", log);
     int ret = 0;
     if (level > 0)
     {
@@ -212,7 +218,9 @@ void getOtherLevel(char *uid, char *inode)
     char uid_ino[30];
     sprintf(uid_ino, "%s.%s", uid, inode);
     printf("get uid_ino %s\n", uid_ino);
-    logwrite(info, "get other %s,uid %s", inode, uid);
+    char log[50];
+    sprintf(log, "get other %s,uid %s", inode, uid);
+    logwrite(info, "%s", log);
     int level = db_search_right(db, "user_file", uid_ino);
     if (level == -1)
     {
@@ -234,7 +242,9 @@ void deleteOtherLevel(char *uid, char *inode)
     char uid_ino[30];
     sprintf(uid_ino, "%s.%s", uid, inode);
     printf("delete uid_ino %s\n", uid_ino);
-    logwrite(info, "delete other %s,uid %s", inode, uid);
+    char log[50];
+    sprintf(log, "delete other %s,uid %s", inode, uid);
+    logwrite(info, "%s", log);
     int ret = db_delete_right(db, "user_file", uid_ino);
     if (ret == 0)
     {
@@ -286,36 +296,38 @@ int main(int argc, char **argv)
     {
         if (argc > 1)
         {
-            while(1){}
+            while (1)
+            {
+            }
         }
         else
         {
-        char buf[1024];
-        char msg[1024];
-        
-        // scanf("%s", msg);
-        u2k_socket_init();
-        printf("init succees\n");
+            char buf[1024];
+            char msg[1024];
 
-        // scanf("%s", msg);
-        u2k_connect();
-        printf("connect!\n");
+            // scanf("%s", msg);
+            u2k_socket_init();
+            printf("init succees\n");
 
-        while(1)
-        {   
-            u2k_recv(buf, 1024);
-            printf("rece msg\n");
-            msg_handle((struct prm_msg *)buf, db);
-            printf("handel finish\n");
-        }
+            // scanf("%s", msg);
+            u2k_connect();
+            printf("connect!\n");
 
-        scanf("%s", msg);
-        u2k_disconnect();
-        printf("disconnect");
+            while (1)
+            {
+                u2k_recv(buf, 1024);
+                printf("rece msg\n");
+                msg_handle((struct prm_msg *)buf, db);
+                printf("handel finish\n");
+            }
 
-        // scanf("%s", msg);
-        u2k_socket_release();
-        printf("Release!");
+            scanf("%s", msg);
+            u2k_disconnect();
+            printf("disconnect");
+
+            // scanf("%s", msg);
+            u2k_socket_release();
+            printf("Release!");
         }
     }
     // 子进程使用socket与客户端之间通信
