@@ -33,6 +33,6 @@ sudo ./client.exe -g -f ./test/testfile/test1
 sudo ./client.exe -g -f ./test/testfile/test2
 sudo ./client.exe -g -f ./test/testfile/test3
 sudo ./client.exe -g -f ./test/testfile/test4
-sudo ./client.exe -s 2 -f ./test/testfile/test2.l
-sudo ./client.exe -s 2 -f ./test/testfile/t2
+sudo ./client.exe -g -f ./test/testfile/test2.l
+sudo ./client.exe -g -f ./test/testfile/t2
 
