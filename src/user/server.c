@@ -73,7 +73,7 @@ void success()
 void setUserLevel(char *uid, int level)
 {
     printf("set user %s,level: %d \n", uid, level);
-    char log[50];
+    char log[1000];
     sprintf(log, "set user %s,level: %d", uid, level);
     logwrite(info, "%s", log);
     int ret = db_set_right(db, "user_file", uid, level);
@@ -127,7 +127,7 @@ void deleteUserLevel(char *uid)
 void setFileLevel(char *inode, int level)
 {
     printf("set file %s,level: %d \n", inode, level);
-    char log[50];
+    char log[1000];
     sprintf(log, "set file %s,level: %d", inode, level);
     logwrite(info, "%s", log);
     int ret = db_set_right(db, "file", inode, level);
@@ -185,7 +185,7 @@ void setOtherLevel(char *uid, char *inode, int level)
     char uid_ino[30];
     sprintf(uid_ino, "%s.%s", uid, inode);
     printf("set uid_ino %s, level: %d \n", uid_ino, level);
-    char log[50];
+    char log[1000];
     sprintf(log, "set other %s,uid %s, level: %d", inode, uid, level);
     logwrite(info, "%s", log);
     int ret = 0;
@@ -218,7 +218,7 @@ void getOtherLevel(char *uid, char *inode)
     char uid_ino[30];
     sprintf(uid_ino, "%s.%s", uid, inode);
     printf("get uid_ino %s\n", uid_ino);
-    char log[50];
+    char log[1000];
     sprintf(log, "get other %s,uid %s", inode, uid);
     logwrite(info, "%s", log);
     int level = db_search_right(db, "user_file", uid_ino);
@@ -242,7 +242,7 @@ void deleteOtherLevel(char *uid, char *inode)
     char uid_ino[30];
     sprintf(uid_ino, "%s.%s", uid, inode);
     printf("delete uid_ino %s\n", uid_ino);
-    char log[50];
+    char log[1000];
     sprintf(log, "delete other %s,uid %s", inode, uid);
     logwrite(info, "%s", log);
     int ret = db_delete_right(db, "user_file", uid_ino);

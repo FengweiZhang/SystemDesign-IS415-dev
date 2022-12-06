@@ -166,7 +166,7 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid, unsigned cha
     if (op == GET_USER_LEVEL && rspbuf.stat == OP_SUCCESS)
     {
         printf("get user %s level : %d\n", username, rspbuf.level);
-        char log[50];
+        char log[1000];
         sprintf(log, "get user %s level : %d", username, rspbuf.level);
         logwrite(info, "%s", log);
     }
@@ -174,14 +174,14 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid, unsigned cha
     if (op == GET_FILE_LEVEL && rspbuf.stat == OP_SUCCESS)
     {
         printf("get %s level : %d\n", filepath, rspbuf.level);
-        char log[50];
+        char log[1000];
         sprintf(log, "get %s level : %d", filepath, rspbuf.level);
         logwrite(info, "%s", log);
     }
     if (op == SET_USER_LEVEL && rspbuf.stat == OP_SUCCESS)
     {
         printf("set user %s level : %d\n", username, reqbuf.level);
-        char log[50];
+        char log[1000];
         sprintf(log, "set user %s level : %d", username, reqbuf.level);
         logwrite(info, "%s", log);
     }
@@ -189,7 +189,7 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid, unsigned cha
     if (op == SET_FILE_LEVEL && rspbuf.stat == OP_SUCCESS)
     {
         printf("set file %s level : %d\n", filepath, reqbuf.level);
-        char log[50];
+        char log[1000];
         sprintf(log, "set file %s level : %d", filepath, reqbuf.level);
         logwrite(info, "%s", log);
     }
