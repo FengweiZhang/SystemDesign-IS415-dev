@@ -369,7 +369,7 @@ int main(int argc, char **argv)
     if (mode1 == 2)
     {
         inode = filepath[0] - '0';
-        printf("inode: %lu,option:%d\n", inode, option);
+        // printf("inode: %lu,option:%d\n", inode, option);
         if (inode < 5 || inode > 7)
         {
             usage();

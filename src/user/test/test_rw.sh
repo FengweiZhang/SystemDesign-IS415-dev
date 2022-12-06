@@ -1,10 +1,10 @@
 #!/bin/bash
 
-echo "\nwhoami"
+echo -e "\nwhoami"
 whoami
 
-echo "\ntry to write"
+echo -e "\ntry to write"
 ./test_write.out
 
-echo "\ntry to read"
+echo -e "\ntry to read"
 ./test_read.out

@@ -8,6 +8,7 @@ int main(){
     char filename2[100] = "./testfile/test2";
     char filename3[100] = "./testfile/test3";
     char filename4[100] = "./testfile/test4";
+    char filename5[100] = "./testfile/test2.l";
     FILE *pf = fopen(filename1, "r");
     if (pf == NULL)
     {
@@ -43,6 +44,25 @@ int main(){
         else
         {
             printf("read test2 succeed\n");
+        }
+        fclose(pf);
+    }
+
+    pf = fopen(filename5, "r");
+    if (pf == NULL)
+    {
+        perror("open test2.l failed");
+    }
+    else
+    {
+        
+        if (fscanf(pf, "%s", buf) < 0)
+        {
+            perror("read test2.l failed");
+        }
+        else
+        {
+            printf("read test2.l succeed\n");
         }
         fclose(pf);
     }
