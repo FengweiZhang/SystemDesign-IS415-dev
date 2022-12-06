@@ -176,14 +176,14 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid, unsigned cha
     }
     if (op == SET_USER_LEVEL && rspbuf.stat == OP_SUCCESS)
     {
-        printf("set user %s level : %d\n", username, level);
-        logwrite(info, "set user %s level : %d", username, level);
+        printf("set user %s level : %d\n", username, reqbuf.level);
+        logwrite(info, "set user %s level : %d", username, reqbuf.level);
     }
 
     if (op == SET_FILE_LEVEL && rspbuf.stat == OP_SUCCESS)
     {
-        printf("set file %s level : %d\n", filepath, level);
-        logwrite(info, "set file %s level : %d", filepath, level);
+        printf("set file %s level : %d\n", filepath, reqbuf.level);
+        logwrite(info, "set file %s level : %d", filepath, reqbuf.level);
     }
     if (op == DELETE_USER_LEVEL && rspbuf.stat == OP_SUCCESS)
     {
@@ -222,7 +222,7 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid, unsigned cha
             printf("ban user %s permission of %s!", username, str[reqbuf.ino - 5]);
         }
 
-        logwrite(info, "set user to other file level : %d", level);
+        logwrite(info, "set user to other file level : %d", reqbuf.level);
     }
     if (op == DELETE_USER_TO_OTHER_LEVEL && rspbuf.stat == OP_SUCCESS)
     {
