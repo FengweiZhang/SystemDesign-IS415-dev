@@ -171,8 +171,8 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid, unsigned cha
 
     if (op == GET_FILE_LEVEL && rspbuf.stat == OP_SUCCESS)
     {
-        printf("get file %s level : %d\n", filepath, rspbuf.level);
-        logwrite(info, "get file %s level : %d", filepath, rspbuf.level);
+        printf("get %s level : %d\n", filepath, rspbuf.level);
+        logwrite(info, "get %s level : %d", filepath, rspbuf.level);
     }
     if (op == SET_USER_LEVEL && rspbuf.stat == OP_SUCCESS)
     {
@@ -193,20 +193,20 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid, unsigned cha
 
     if (op == DELETE_FILE_LEVEL && rspbuf.stat == OP_SUCCESS)
     {
-        printf("delete file %s level\n", filepath);
+        printf("delete %s level\n", filepath);
         logwrite(info, "delete file %s level", filepath);
     }
 
-    char *str[] = {"root", "net", "log"};
+    char *str[] = {"reboot", "network", "kernel log"};
     if (op == GET_USER_TO_OTHER_LEVEL && rspbuf.stat == OP_SUCCESS)
     {
         if (rspbuf.level > 0)
         {
-            printf("user %s have permission of %s!", username, str[reqbuf.ino - 5]);
+            printf("user %s have permission of %s!\n", username, str[reqbuf.ino - 5]);
         }
         else
         {
-            printf("user %s don't have permission of %s!", username, str[reqbuf.ino - 5]);
+            printf("user %s don't have permission of %s!\n", username, str[reqbuf.ino - 5]);
         }
 
         logwrite(info, "get user to other file level : %d", rspbuf.level);
@@ -215,11 +215,11 @@ void handle(unsigned char op, unsigned long ino, unsigned long uid, unsigned cha
     {
         if (reqbuf.level > 0)
         {
-            printf("give user %s permission of %s!", username, str[reqbuf.ino - 5]);
+            printf("give user %s permission of %s!\n", username, str[reqbuf.ino - 5]);
         }
         else
         {
-            printf("ban user %s permission of %s!", username, str[reqbuf.ino - 5]);
+            printf("ban user %s permission of %s!\n", username, str[reqbuf.ino - 5]);
         }
 
         logwrite(info, "set user to other file level : %d", reqbuf.level);
@@ -249,7 +249,7 @@ void usage(void)
                    "  -d (delete)	delete level\n"
                    "  -u (user)	input user name for operation\n"
                    "  -f (file)	input file path for operation or other\n"
-                   "  other for -f: 5 root,6 net,7 log\n");
+                   "  other for -f: 5 reboot,6 network,7 kernel log\n");
 }
 
 /**
@@ -341,7 +341,14 @@ int main(int argc, char **argv)
         {
             // 获得文件的inode节点号
             inode = file_stat.st_ino;
-            printf("file inode : %lu \n", inode);
+            if (S_ISDIR(file_stat.st_mode))
+            {
+                printf("directory inode : %lu, \t", inode);
+            }
+            else
+            {
+                printf("file inode : %lu, \t", inode);
+            }
         }
         else
         {
