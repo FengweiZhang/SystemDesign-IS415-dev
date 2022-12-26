@@ -1,3 +1,14 @@
+/**
+ * @file prm_module.c
+ * @author Fengwei Zhang (zhang-fengwei@foxmail.com)
+ * @brief 模块主文件
+ * @version 0.1
+ * @date 2022-12-25
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #include "prm_error.h"
 #include "prm_hook.h"
 #include "prm_netlink.h"

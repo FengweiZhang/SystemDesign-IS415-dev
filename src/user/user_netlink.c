@@ -1,9 +1,9 @@
 /**
- * @file my_user.c
- * @author fg (you@domain.com)
- * @brief netlink moduel in user mode
+ * @file user_netlink.c
+ * @author Fengwei Zhang (zhang-fengwei@foxmail.com)
+ * @brief 用户态netlink模块
  * @version 0.1
- * @date 2022-10-20
+ * @date 2022-12-25
  * 
  * @copyright Copyright (c) 2022
  * 

@@ -1,3 +1,14 @@
+/**
+ * @file prm_hook.c
+ * @author Fengwei Zhang (zhang-fengwei@foxmail.com)
+ * @brief hook模块
+ * @version 0.1
+ * @date 2022-12-25
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #include "prm_hook.h"
 #include "prm_error.h"
 #include "prm_netlink.h"

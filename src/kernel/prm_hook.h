@@ -1,3 +1,14 @@
+/**
+ * @file prm_hook.h
+ * @author Fengwei Zhang (zhang-fengwei@foxmail.com)
+ * @brief hook模块头文件
+ * @version 0.1
+ * @date 2022-12-25
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #ifndef _PRM_HOOK_H
 #define _PRM_HOOK_H
 
